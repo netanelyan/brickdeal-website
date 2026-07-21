@@ -8,7 +8,7 @@
   /* Tried in order, all relative — a leading "/" breaks GitHub Pages project
      sites, which serve from https://user.github.io/repo/. The sample fixture is
      last so a checkout renders before the bot export has ever run. */
-  var FEED_CANDIDATES = ['./deals.json', './data/deals.json', './deals.sample.json'];
+  var FEED_CANDIDATES = ['./deals.json', './data/deals.json'];
 
   var PAGE_SIZE = 24;
   var CTA_AFTER = 8;          // insert the Telegram band after this many cards
@@ -62,7 +62,7 @@
     filters: $('filters'), filtersToggle: $('filters-toggle'), filtersCount: $('filters-count'),
     reset: $('reset'), emptyReset: $('empty-reset'),
     grid: $('grid'), count: $('count'), titleCount: $('title-count'),
-    featured: $('featured'), heroCount: $('hero-count'),
+    featured: $('featured'), heroCount: $('hero-count'), reroll: $('reroll'),
     empty: $('empty'), error: $('error'), errorTitle: $('error-title'), errorSub: $('error-sub'),
     retry: $('retry'), more: $('more'), freshness: $('freshness'), devBanner: $('dev-banner')
   };
@@ -202,6 +202,24 @@
         if (d) out.push(d);
       }
       if (!out.length) throw { kind: 'unusable' };
+
+      /* Collapse duplicate listings of the same set — see assets/collapse.js.
+         Applied here, at the one place the feed enters the app, so the grid, the
+         theme chips, the hero, the "מציג N מתוך M" line and the heading count
+         are all derived from the same collapsed list and cannot disagree. The
+         feed itself keeps every listing; this is display-time only. */
+      if (typeof BrickDealCollapse === 'undefined') {
+        console.warn('BrickDeal: assets/collapse.js not loaded — showing every listing');
+        return out;
+      }
+      var beforeCollapse = out.length;
+      out = BrickDealCollapse.collapse(out);
+      if (beforeCollapse !== out.length) {
+        console.info(
+          'BrickDeal: collapsed ' + (beforeCollapse - out.length) +
+          ' duplicate listing(s) -> ' + out.length + ' sets'
+        );
+      }
       return out;
     });
   }
@@ -527,17 +545,61 @@
 
   /* ---------- featured (hero) ---------- */
 
-  /* Editorial picks win. Otherwise lead with the biggest *real* discounts, and
-     if the feed carries no original prices at all, fall back to the newest —
-     never manufacture a comparison just to fill the slot. */
+  /* Editorial picks win. Otherwise: build a pool of every deal with a GENUINE
+     discount and draw from it at random, rather than taking the top N.
+
+     Sorting by discount produced a hero that was effectively static and visually
+     repetitive — the largest percentages clustered on one product type (three F1
+     helmets at 71%, two of them the same listing at the same price), because
+     near-identical listings of one popular set all carry near-identical
+     discounts. Random sampling from the whole discounted pool surfaces the
+     breadth of the catalogue instead, and re-draws per page load so the home
+     page changes for repeat visitors.
+
+     d.discount is non-null only when normalize() found a real originalPrice
+     above the current price, so the pool can never contain an invented
+     comparison. If it cannot fill n slots under the constraints below, we fall
+     back to newest rather than relaxing them. */
+  function shuffled(list) {
+    var a = list.slice();
+    for (var i = a.length - 1; i > 0; i--) {       // Fisher-Yates
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
   function pickFeatured(n) {
     var flagged = allDeals.filter(function (d) { return d.featured; });
     if (flagged.length) return flagged.slice(0, n);
 
-    var discounted = allDeals.filter(function (d) { return d.discount !== null; });
-    if (discounted.length >= n) {
-      return discounted.slice().sort(function (a, b) { return b.discount - a.discount; }).slice(0, n);
+    var pool = shuffled(allDeals.filter(function (d) { return d.discount !== null; }));
+
+    var picks = [];
+    var usedSets = {};
+    var usedThemes = {};
+
+    for (var i = 0; i < pool.length && picks.length < n; i++) {
+      var d = pool[i];
+
+      /* Same set-level rule the grid collapses on. allDeals is already collapsed
+         so this should never trigger, but the hero must not depend on that
+         staying true — two cards for one set is exactly the repetition being
+         fixed here. */
+      if (d.setId && usedSets[d.setId]) continue;
+
+      /* One deal per theme, so the row reads as three different kinds of thing.
+         A deal with no theme is left unconstrained: an unknown theme is not
+         evidence of a shared theme, and blocking on it would quietly shrink the
+         pool and push us into the newest-fallback more often than warranted. */
+      if (d.theme && usedThemes[d.theme]) continue;
+
+      picks.push(d);
+      if (d.setId) usedSets[d.setId] = true;
+      if (d.theme) usedThemes[d.theme] = true;
     }
+
+    if (picks.length === n) return picks;
 
     return allDeals.slice().sort(function (a, b) {
       return (b.postedAt || 0) - (a.postedAt || 0);
@@ -596,13 +658,56 @@
     return a;
   }
 
-  function renderFeatured() {
-    var picks = pickFeatured(3);
-    if (!picks.length) return;
+  var featuredSig = '';
 
+  function sigOf(picks) {
+    return picks.map(function (d) { return d.productId; }).join(',');
+  }
+
+  function paintFeatured(picks) {
     el.featured.textContent = '';
     picks.forEach(function (d) { el.featured.appendChild(featuredCard(d)); });
     el.featured.hidden = false;
+    featuredSig = sigOf(picks);
+  }
+
+  function renderFeatured() {
+    var picks = pickFeatured(3);
+    if (!picks.length) return;
+    paintFeatured(picks);
+
+    /* Offer the re-roll only when the pool can actually produce something else.
+       Editorial picks are a fixed list by definition, and a pool of three has
+       nothing left to draw — a button that visibly does nothing is worse than
+       no button at all. */
+    if (!el.reroll) return;
+    var hasEditorial = allDeals.some(function (d) { return d.featured; });
+    var poolSize = allDeals.filter(function (d) { return d.discount !== null; }).length;
+    if (hasEditorial || poolSize <= 3) return;
+
+    el.reroll.hidden = false;
+    el.reroll.addEventListener('click', reroll);
+  }
+
+  /* Re-runs the same constrained draw and swaps the three cards in place. The
+     whole pool is already in memory, so this is a re-render — no fetch, no
+     reload, and the grid below is untouched.
+
+     Retries a few times when the draw repeats the current trio: landing on the
+     same three is a legitimate random outcome, but pressing "show me others"
+     and getting no visible change reads as a broken button. Capped rather than
+     looped forever, since with a small pool an identical draw may be the only
+     option, and re-painting the same cards is harmless. */
+  function reroll() {
+    var picks = pickFeatured(3);
+    for (var i = 0; i < 8 && sigOf(picks) === featuredSig; i++) picks = pickFeatured(3);
+    if (!picks.length) return;
+
+    paintFeatured(picks);
+
+    el.reroll.classList.remove('is-spinning');
+    void el.reroll.offsetWidth;   // force reflow so the animation replays
+    el.reroll.classList.add('is-spinning');
   }
 
   function showFreshness() {

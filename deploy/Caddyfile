@@ -1,0 +1,62 @@
+# BrickDeal — /etc/caddy/Caddyfile
+#
+# Automatic HTTPS: Caddy provisions and renews certs for both names on its own,
+# provided :80 and :443 are open and DNS for each name resolves here. Nothing
+# below references a cert path; that is intentional.
+
+# www redirects into the apex so SEO consolidates on one hostname. This block is
+# separate (not a matcher inside the main site) so that Caddy still obtains a
+# certificate for www — the redirect has to be served over HTTPS, otherwise a
+# visitor hitting https://www.brickdealil.com gets a TLS error before the 301
+# can happen, which is exactly the split this is meant to prevent.
+www.brickdealil.com {
+	redir https://brickdealil.com{uri} permanent
+}
+
+brickdealil.com {
+	root * /var/www/brickdeal
+
+	encode zstd gzip
+
+	file_server {
+		# The build wrapper stages each release in .staging-<ts> and keeps
+		# superseded ones in .releases/. Neither may be served: .staging-* is a
+		# half-built tree, and an old release would expose stale prices on URLs
+		# a crawler could find. Both are dot-paths, so one rule covers them.
+		# The live `deal` symlink points into .releases/<ts>; hide matches the
+		# REQUEST path (/deal/...), not the resolved target, so this does not
+		# block the pages that are meant to be public.
+		hide .*
+	}
+
+	# deals.json is the live feed the client-side grid fetches. app.js already
+	# requests it with cache: 'no-cache', but a caching proxy or CDN in front
+	# would otherwise be free to hold a stale copy, which shows visitors prices
+	# that no longer match the deal pages generated from the same file.
+	@feed path /deals.json
+	header @feed Cache-Control "no-cache, must-revalidate"
+
+	# Generated HTML changes whenever the feed does (every ~2 min at most, via
+	# the rebuild timer). Short TTL keeps prices honest without giving up all
+	# caching. Assets are content-stable, so they get a long one.
+	@html path *.html /
+	header @html Cache-Control "public, max-age=300"
+
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=604800"
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		# The affiliate links are outbound to aliexpress; nothing is embedded.
+		X-Frame-Options SAMEORIGIN
+		-Server
+	}
+
+	log {
+		output file /var/log/caddy/brickdeal.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
+}

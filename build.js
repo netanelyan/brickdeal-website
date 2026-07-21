@@ -10,7 +10,7 @@
  * has real HTML to index instead of an empty shell.
  *
  * Run:  node build.js                    (reads ./deals.json)
- *       node build.js --feed deals.sample.json --base https://brickdeal.co.il
+ *       node build.js --feed deals.sample.json --base https://brickdealil.com
  *
  * No dependencies, no framework. Commit the output.
  */
@@ -18,6 +18,7 @@
 'use strict';
 
 const fs = require('fs');
+const { collapse } = require('./assets/collapse.js');
 const path = require('path');
 
 const args = process.argv.slice(2);
@@ -27,7 +28,7 @@ const argOf = (flag, fallback) => {
 };
 
 const FEED = argOf('--feed', 'deals.json');
-const BASE = argOf('--base', 'https://brickdeal.co.il').replace(/\/$/, '');
+const BASE = argOf('--base', 'https://brickdealil.com').replace(/\/$/, '');
 const OUT = argOf('--out', '.');
 
 const TELEGRAM = 'https://t.me/+juxUyQ49on1mZGRk';
@@ -231,7 +232,7 @@ ${rows.map(({ d, id }) => `  <li><a href="deal/${esc(id)}.html"><span>${esc(d.na
 
   return shell({
     title: `ארכיון הדילים – ${rows.length} סטים של אבני בנייה תואמות | BrickDeal`,
-    description: `רשימת כל ${rows.length} הדילים על לגו סיני ואבני בנייה תואמות שפורסמו ב־BrickDeal.`,
+    description: `רשימת כל ${rows.length} הדילים על סטים ואבני בנייה תואמות שפורסמו ב־BrickDeal.`,
     canonical: `${BASE}/archive.html`,
     body,
   });
@@ -286,6 +287,22 @@ function main() {
     if (!id) { skipped.push(`${d.productId}: unusable id`); continue; }
     rows.push({ d, id });
   }
+
+  /* Collapse duplicate listings of the same set, using the exact rule the
+     client grid uses (assets/collapse.js). Runs AFTER the dead/invalid filter
+     above so a dropped record can never win its group, and BEFORE sorting, so
+     the page count, archive.html and sitemap.xml all describe the same set of
+     deals the home page shows. */
+  const keptRows = (() => {
+    const byId = new Map(rows.map((r) => [String(r.d.productId), r]));
+    const kept = collapse(rows.map((r) => r.d));
+    return kept.map((d) => byId.get(String(d.productId))).filter(Boolean);
+  })();
+  if (keptRows.length !== rows.length) {
+    console.log(`build: collapsed ${rows.length - keptRows.length} duplicate listing(s) -> ${keptRows.length} sets`);
+  }
+  rows.length = 0;
+  rows.push(...keptRows);
 
   rows.sort((a, b) => new Date(b.d.postedAt || 0) - new Date(a.d.postedAt || 0));
 

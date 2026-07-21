@@ -1,0 +1,10 @@
+[Unit]
+Description=Rebuild BrickDeal static pages from deals.json
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/brickdeal-build.sh
+# Runs as root because the bot (also root, under pm2) owns the feed and the web
+# root. The script chmods its output a+rX so the caddy user can read it.
+User=root

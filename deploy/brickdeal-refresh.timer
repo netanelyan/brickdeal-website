@@ -1,0 +1,16 @@
+[Unit]
+Description=Run the BrickDeal price refresh nightly
+
+[Timer]
+# 03:17 — off the hour on purpose, so it doesn't collide with the drip poster
+# or with everything else on the box that fires at :00.
+OnCalendar=*-*-* 03:17:00
+# If the VPS was off (or the run was missed) when this was due, catch up on the
+# next boot rather than silently skipping a night. Price staleness is exactly
+# what this job exists to prevent, and the site greys out deals unchecked for
+# 14+ days, so a silently skipped run shows up as a visibly ageing catalog.
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

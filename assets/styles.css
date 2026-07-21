@@ -208,6 +208,32 @@ button, input, select { font: inherit; color: inherit; }
 
 @media (min-width: 560px) { .featured { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; } }
 
+/* Re-roll the hero picks. Deliberately quiet: it sits directly under editorial
+   content and must read as a small affordance, not a second call to action
+   competing with the Telegram button. Muted text, hairline border, no fill. */
+.featured__reroll {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 6px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+.featured__reroll:hover { color: var(--text); border-color: var(--muted); }
+.featured__reroll__icon { display: inline-block; line-height: 1; }
+.featured__reroll.is-spinning .featured__reroll__icon { animation: bd-spin 0.45s ease; }
+@keyframes bd-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .featured__reroll.is-spinning .featured__reroll__icon { animation: none; }
+}
+
 /* A featured card is the normal card with the comparison made explicit. */
 .fcard {
   display: flex;

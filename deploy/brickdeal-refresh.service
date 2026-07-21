@@ -1,0 +1,19 @@
+[Unit]
+Description=BrickDeal nightly price refresh (re-check oldest deals in deals.json)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/brickdeal-automation
+ExecStart=/usr/bin/node scripts/refresh-deals.js
+# Root because the bot (also root, under pm2) owns the feed in the web root.
+# src/deals.js writes atomically (tmp + rename), and the script re-reads and
+# merges just before writing, so this cannot clobber a deal the bot posts
+# while the refresh is mid-run.
+User=root
+# A stuck API call must not leave this running into the next night.
+TimeoutStartSec=2h
+
+[Install]
+WantedBy=multi-user.target

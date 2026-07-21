@@ -1,0 +1,15 @@
+[Unit]
+Description=Rebuild BrickDeal static pages every 2 minutes
+
+[Timer]
+# Bounds how long a page can disagree with the feed. The script exits
+# immediately when deals.json has not changed, so quiet ticks are free.
+OnBootSec=2min
+OnUnitActiveSec=2min
+AccuracySec=15s
+# Persistent so a reboot straddling a feed write still triggers a catch-up run
+# rather than waiting for the next interval.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
