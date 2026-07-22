@@ -40,6 +40,75 @@
 
 <a class="skip-link" href="#deals">דלגו לרשימת הדילים</a>
 
+<!-- ══════════════════════════════════════════════════════════════════════════
+     GIVEAWAY BANNER — TIME-LIMITED. Started 2026-07-22, ends ~2026-07-29.
+     TO REMOVE: delete this whole block, from this comment down to
+     "END GIVEAWAY BANNER". Everything the banner needs (markup + styles + the
+     dismiss handler) lives here, in this one place — nothing else to touch.
+     Deliberately amber-on-dark: the one spot that breaks the charcoal theme,
+     because it is temporary. Dismiss is in-memory only (no localStorage), so it
+     reappears on reload — that is intentional and fine for a 7-day promo.
+     ══════════════════════════════════════════════════════════════════════════ -->
+<style>
+.giveaway {
+  position: relative;
+  background: #F5B41E;          /* matches --accent; hard-coded so removal is one block */
+  color: #17181C;
+  padding: 8px 44px;           /* 44px each side reserves room for the × on the inline-end */
+  text-align: center;          /* block flow: the message always wraps, never clips */
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.giveaway__link {
+  color: inherit;
+}
+.giveaway__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: middle;
+  margin-inline-start: 6px;
+  background: #17181C;
+  color: #F5B41E;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.giveaway__link:hover .giveaway__cta { background: #000; }
+.giveaway__close {
+  position: absolute;
+  inset-inline-end: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #17181C;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.giveaway__close:hover { opacity: 1; background: rgba(0, 0, 0, 0.12); }
+@media (min-width: 560px) {
+  .giveaway { font-size: 0.875rem; padding-block: 9px; }
+}
+</style>
+<aside class="giveaway" id="giveaway" aria-label="הגרלה פעילה">
+  <a class="giveaway__link" href="https://instagram.com/brickdealil" target="_blank" rel="noopener">
+    <span class="giveaway__text">🎁 הגרלה כפולה — פורשה 911 וזר ורדים · 2 זוכים</span>
+    <span class="giveaway__cta">להשתתפות <span aria-hidden="true">‹</span></span>
+  </a>
+  <button class="giveaway__close" type="button" aria-label="סגירת ההודעה"
+          onclick="this.closest('.giveaway').remove()">&times;</button>
+</aside>
+<!-- ══════════════════════ END GIVEAWAY BANNER ══════════════════════ -->
+
 <div class="dev-banner" id="dev-banner" hidden>
   ⚠ נתוני דוגמה — הקישורים אינם אמיתיים. אין להעלות גרסה זו לאוויר.
 </div>
