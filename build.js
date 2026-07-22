@@ -84,7 +84,7 @@ function shell({ title, description, canonical, ogImage, body, extraHead = '' })
 <link rel="icon" href="${esc(LOGO)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&family=Space+Grotesk:wght@500;700&family=Yellowtail&display=swap">
 <link rel="stylesheet" href="${esc(canonical.includes('/deal/') ? '../assets/styles.css' : 'assets/styles.css')}">
 ${extraHead}
 </head>
@@ -128,8 +128,12 @@ ${body}
       LEGO® הוא סימן מסחרי רשום של קבוצת LEGO, שאינה מקושרת לאתר זה ואינה מעורבת בו.
       המוצרים המוצגים הם אבני בנייה תואמות מיצרנים אחרים.
     </p>
+    <div style="text-align: center; padding: 25px 0 0;">
+      <blackz-signature></blackz-signature>
+    </div>
   </div>
 </footer>
+<script src="${esc(canonical.includes('/deal/') ? '../assets/blackz-signature.js' : 'assets/blackz-signature.js')}" defer></script>
 </body>
 </html>
 `;
