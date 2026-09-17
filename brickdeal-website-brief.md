@@ -114,7 +114,11 @@ The brand identity is already established across Instagram, the deal cards, and 
 
 **Layout:** `dir="rtl"`, `lang="he"`. Hebrew throughout. Mobile-first — the overwhelming majority of traffic arrives from Instagram on a phone.
 
-**Logo:** `https://cdn.shopify.com/s/files/1/0707/4938/9043/files/logo12.png?v=1784028153`
+**Logo:** the brand pack in `assets/brand/` (unpacked as delivered — `svg/`, `png/`,
+`favicon/`, plus its own `README.txt` mapping each file to its intended use). The
+site is dark, so it uses the `-on-dark` variants throughout: the Hebrew lockup in
+the header, the favicon set in `<head>`. Ink `#0B0B0C`, bone `#F3F0EA`, amber
+`#F2A93B` — the amber block is the only place that colour appears in the mark.
 
 **Signature element:** spend the boldness in one place — the price. Everything else stays quiet and disciplined. The existing creatives work because a huge amber number dominates a dark, uncluttered frame. Carry that into the card design rather than inventing a new device.
 

@@ -97,16 +97,12 @@ button, input, select { font: inherit; color: inherit; }
   gap: 12px;
 }
 
-.brand { display: flex; align-items: center; gap: 10px; }
+.brand { display: flex; align-items: center; }
 
-.brand__logo { height: 40px; width: 40px; object-fit: contain; }
-
-.brand__name {
-  font-size: 1.25rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-}
+/* The logo is the 3.6:1 wordmark lockup, so height drives it and width follows.
+   Sized off the nav buttons rather than the old square mark: at 34px the
+   lockup's cap height lands on the same line as the Telegram button's label. */
+.brand__logo { height: 34px; width: auto; }
 
 .site-nav { display: flex; align-items: center; gap: 4px; }
 
@@ -123,8 +119,7 @@ button, input, select { font: inherit; color: inherit; }
 .icon-link:hover { color: var(--text); background: var(--surface-2); }
 
 @media (min-width: 420px) {
-  .brand__logo { height: 46px; width: 46px; }
-  .brand__name { font-size: 1.4rem; }
+  .brand__logo { height: 40px; }
 }
 
 /* ---------- buttons ---------- */

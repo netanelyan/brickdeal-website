@@ -10,6 +10,7 @@ root README still describes — see "Superseded" below.
 /opt/brickdeal-site/        this repo — the source
 /var/www/brickdeal/         the served root
   index.html, assets/, robots.txt   copied from the source
+  favicon.ico                       copied from the source — see note below
   deals.json                        written by the bot on each post
   deal/ -> .releases/<ts>/          symlink, swapped atomically per build
   archive.html, sitemap.xml         generated
@@ -18,6 +19,13 @@ root README still describes — see "Superseded" below.
 
 The bot writes `deals.json` straight into the web root (`DEALS_PATH` in its
 `.env`), atomically, only after a deal has actually posted to the channel.
+
+### favicon.ico at the root
+
+Every page declares its icons explicitly (`assets/brand/favicon/`), so browsers
+never need the root file. It is there for the clients that skip the markup and
+request `/favicon.ico` directly — feed readers, link scrapers, some crawlers. It
+has to be copied alongside `index.html`; it is not covered by copying `assets/`.
 
 ## Files here
 

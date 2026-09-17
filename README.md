@@ -8,7 +8,11 @@ so search engines have something real to index.
 index.html            searchable catalog (client-side)
 assets/styles.css      brand tokens + layout
 assets/app.js          fetch, search, chips, filters, sort, URL state
+assets/brand/          logo pack, unpacked as delivered — see its README.txt
+assets/brand/og.png    generated link-preview card — tools/make-og-card.js
+favicon.ico            root copy, for clients that ask for /favicon.ico blind
 build.js               generates deal/*.html, archive.html, sitemap.xml
+tools/                 one-off generators, not part of a build
 deals.json             the feed — produced by the bot. NOT in this repo yet.
 deals.sample.json      fixture for local rendering. Never deploy.
 deal/                  generated — one static page per deal

@@ -15,10 +15,15 @@
 <meta property="og:title" content="אבני בנייה תואמות במחיר זול – דילים מאליאקספרס">
 <meta property="og:description" content="קטלוג דילים על סטים ואבני בנייה תואמות מאליאקספרס. מחירים בשקלים, חיפוש מיידי.">
 <meta property="og:url" content="https://brickdealil.com/">
-<meta property="og:image" content="https://cdn.shopify.com/s/files/1/0707/4938/9043/files/logo12.png?v=1784028153">
+<meta property="og:image" content="https://brickdealil.com/assets/brand/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="בריק דיל">
 <meta name="twitter:card" content="summary_large_image">
 
-<link rel="icon" href="https://cdn.shopify.com/s/files/1/0707/4938/9043/files/logo12.png?v=1784028153">
+<link rel="icon" href="assets/brand/favicon/favicon.ico" sizes="32x32">
+<link rel="icon" href="assets/brand/favicon/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/brand/favicon/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://ae-pic-a1.aliexpress-media.com">
@@ -40,85 +45,18 @@
 
 <a class="skip-link" href="#deals">דלגו לרשימת הדילים</a>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     GIVEAWAY BANNER — TIME-LIMITED. Started 2026-07-22, ends ~2026-07-29.
-     TO REMOVE: delete this whole block, from this comment down to
-     "END GIVEAWAY BANNER". Everything the banner needs (markup + styles + the
-     dismiss handler) lives here, in this one place — nothing else to touch.
-     Deliberately amber-on-dark: the one spot that breaks the charcoal theme,
-     because it is temporary. Dismiss is in-memory only (no localStorage), so it
-     reappears on reload — that is intentional and fine for a 7-day promo.
-     ══════════════════════════════════════════════════════════════════════════ -->
-<style>
-.giveaway {
-  position: relative;
-  background: #F5B41E;          /* matches --accent; hard-coded so removal is one block */
-  color: #17181C;
-  padding: 8px 44px;           /* 44px each side reserves room for the × on the inline-end */
-  text-align: center;          /* block flow: the message always wraps, never clips */
-  font-size: 0.8125rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-.giveaway__link {
-  color: inherit;
-}
-.giveaway__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  vertical-align: middle;
-  margin-inline-start: 6px;
-  background: #17181C;
-  color: #F5B41E;
-  padding: 3px 10px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-.giveaway__link:hover .giveaway__cta { background: #000; }
-.giveaway__close {
-  position: absolute;
-  inset-inline-end: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: #17181C;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  opacity: 0.7;
-}
-.giveaway__close:hover { opacity: 1; background: rgba(0, 0, 0, 0.12); }
-@media (min-width: 560px) {
-  .giveaway { font-size: 0.875rem; padding-block: 9px; }
-}
-</style>
-<aside class="giveaway" id="giveaway" aria-label="הגרלה פעילה">
-  <a class="giveaway__link" href="https://instagram.com/brickdealil" target="_blank" rel="noopener">
-    <span class="giveaway__text">🎁 הגרלה כפולה — פורשה 911 וזר ורדים · 2 זוכים</span>
-    <span class="giveaway__cta">להשתתפות <span aria-hidden="true">‹</span></span>
-  </a>
-  <button class="giveaway__close" type="button" aria-label="סגירת ההודעה"
-          onclick="this.closest('.giveaway').remove()">&times;</button>
-</aside>
-<!-- ══════════════════════ END GIVEAWAY BANNER ══════════════════════ -->
-
 <div class="dev-banner" id="dev-banner" hidden>
   ⚠ נתוני דוגמה — הקישורים אינם אמיתיים. אין להעלות גרסה זו לאוויר.
 </div>
 
 <header class="site-header">
   <div class="wrap site-header__inner">
+    <!-- The lockup carries the wordmark, so there is no separate brand name
+         beside it. Hebrew variant: its icon sits on the right, which is the
+         reading order this page is already in. -->
     <a class="brand" href="./" aria-label="בריק דיל — לדף הראשי">
-      <img class="brand__logo" src="https://cdn.shopify.com/s/files/1/0707/4938/9043/files/logo12.png?v=1784028153"
-           alt="" width="48" height="48">
-      <span class="brand__name">בריק דיל</span>
+      <img class="brand__logo" src="assets/brand/svg/brickdeal-lockup-he-on-dark.svg"
+           alt="" width="733" height="202">
     </a>
     <nav class="site-nav" aria-label="ניווט ראשי">
       <a class="icon-link" href="https://www.instagram.com/brickdealil/" rel="noopener" aria-label="אינסטגרם">
