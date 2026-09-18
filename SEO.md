@@ -3,6 +3,15 @@
 The goal: when someone in Israel searches **לגו אליאקספרס**, **לגו סיני**,
 **aliexpress lego** or **לגו זול**, BrickDeal is on the first page.
 
+One constraint shapes everything below: **the trademarked brand name does not
+appear in site copy** (only in the footer disclaimer). So the site cannot
+literally say the word people type. It ranks by being the obvious answer to
+the *question* — "compatible building-brick sets from AliExpress, in Hebrew,
+in shekels" — and by other sites linking to it with the words we don't use.
+Google matches on meaning far more than it used to, and the disclaimer plus
+"תואם" / "אבני בנייה תואמות" give it the association. But expect this to be
+slower and harder than it would be otherwise. Links matter even more.
+
 This file is in two halves. The first is a one-time setup you do by hand, in
 roughly an hour. The second is what moves the needle afterwards — which is
 mostly links and patience, not code.
@@ -32,10 +41,11 @@ If the sitemap only lists the home page, the build timer has not run against a
 real feed yet — see `deploy/README.md`. Do not continue until the sitemap has
 deal and theme URLs in it; there is no point asking Google to crawl an empty site.
 
-Also make sure the two hand-written pages made it to the web root (the build
+Also make sure the hand-written pages made it to the web root (the build
 timer does not copy them):
 
 ```bash
+curl -sI https://brickdealil.com/guide.html | head -1          # 200
 curl -sI https://brickdealil.com/how-it-works.html | head -1   # 200
 ```
 
@@ -70,7 +80,8 @@ This is the only tool that tells you what Google actually sees. Free.
 
 5. **URL Inspection** (top search bar): paste `https://brickdealil.com/`,
    wait for the report, click **Request indexing**. Do the same for
-   `https://brickdealil.com/how-it-works.html` and two or three theme pages
+   `https://brickdealil.com/guide.html`, `https://brickdealil.com/how-it-works.html`
+   and two or three theme pages
    (`https://brickdealil.com/theme/harry-potter.html` etc.). This is a nudge,
    not a guarantee, and there is a daily quota — a handful is enough.
 
@@ -94,15 +105,15 @@ Bing powers DuckDuckGo and a share of Windows search. Ten minutes:
 
 ### 3. Sanity-check what crawlers see
 
-Run each once now, and again whenever `build.js`, `index.html` or
-`how-it-works.html` changes:
+Run each once now, and again whenever `build.js`, `index.html`, `guide.html`
+or `how-it-works.html` changes:
 
 | Check | Where | What "good" looks like |
 |---|---|---|
 | Rich results | <https://search.google.com/test/rich-results> — paste a deal URL | `Product` detected, no errors; `Breadcrumbs` detected. Warnings about missing `review`/`brand` are fine. |
 | Rich results | same tool — paste `https://brickdealil.com/` | `Organization` and `Sitelinks searchbox` detected |
 | Mobile speed | <https://pagespeed.web.dev> — home page and a deal page | Performance ≥ 80 on mobile. The home page loads fonts and a feed; that's the floor, not a target. |
-| Rendered HTML | GSC → URL Inspection → **View crawled page** on `/` | The guide section text is present. The deal grid may or may not be — Google renders JavaScript on a second pass, hours to days later. |
+| Rendered HTML | GSC → URL Inspection → **View crawled page** on `/` | The hero, the guide teaser and the "לפני שקונים" note are present. The deal grid may or may not be — Google renders JavaScript on a second pass, hours to days later. |
 | Link preview | <https://www.opengraph.xyz> or paste a URL into a Telegram chat | Title, description and image show. Deal pages show the product image. |
 
 ### 4. Point the socials at the site
@@ -133,8 +144,10 @@ links to them yet. Ideas that fit BrickDeal, roughly in order of effort:
 
 - **Israeli LEGO communities.** Facebook groups (לגו ישראל, קונים בסין,
   אליאקספרס ישראל and the like), the Israeli LEGO user group, Reddit threads
-  asking "is AliExpress LEGO any good". Answer the actual question and link to
-  the relevant theme page or to `how-it-works.html`, not to the home page.
+  asking whether the AliExpress sets are any good. Answer the actual question
+  and link to `guide.html`, the relevant theme page or `how-it-works.html`,
+  not to the home page. Other people writing the brand name next to your link
+  is exactly the association the site itself can't create.
   One useful reply per week beats ten spammy ones.
 - **Deal-sharing sites and forums** (Zap forums, HWzone, Tapuz-style boards):
   post a specific deal with its deal-page URL when it is genuinely good.
@@ -147,35 +160,38 @@ links to them yet. Ideas that fit BrickDeal, roughly in order of effort:
 What not to do: buy links, exchange links in bulk, post the URL in unrelated
 groups. It doesn't work in 2026 and can get the domain flagged.
 
-### 2. Content that matches what people type
+### 2. Content that matches what people mean
 
 Already in place (nothing to do unless you change copy):
 
-- Home page title/H1/description say **לגו סיני**, **לגו אליאקספרס**,
-  **AliExpress**, **תואמי לגו**. Both scripts matter: Israelis type
-  "aliexpress lego" in Latin letters as often as in Hebrew.
-- The **guide section** on the home page is the crawlable text. The catalog
-  grid is rendered by JavaScript, which Google indexes later and less reliably;
-  the guide is what it reads first.
-- **Theme pages** (`theme/<key>.html`) are the long-tail: "לגו הארי פוטר זול",
-  "לגו טכניק אליאקספרס". They're generated from the feed and exist for every
-  theme that has at least one deal.
+- Home page title/H1/description say **אבני בנייה תואמות**, **אליאקספרס**,
+  **AliExpress**. Both scripts matter: Israelis type "aliexpress" in Latin
+  letters as often as in Hebrew.
+- **`guide.html`** is the first-time-buyer page: what "compatible" means,
+  quality, shipping, customs, finding a set by number, MOC. It's the page most
+  likely to rank for question-shaped searches, and the one to link to from
+  forums. The home page carries a teaser box that links to it.
+- **Theme pages** (`theme/<key>.html`) are the long-tail: "הארי פוטר
+  אליאקספרס", "טכניק תואם זול". They're generated from the feed and exist for
+  every theme that has at least one deal.
 - **Deal pages** carry the set name, set number, price and pieces — which is
-  what someone searching "76470 aliexpress" wants.
-- `how-it-works.html` answers the trust questions ("is it a scam", "is it real
-  LEGO", "how do they make money") that people search before buying.
+  what someone searching "76470 aliexpress" wants. Set numbers are the one
+  exact-match keyword the site can use freely.
+- `how-it-works.html` answers the trust questions ("is it a scam", "is it the
+  real thing", "how do they make money") that people search before buying.
 
 To add to it over time, write a static page in the style of
 `how-it-works.html` and register it in `STATIC_PAGES` in `build.js` so the
 sitemap lists it. Worthwhile topics, each of which is a real search:
 
-- לגו סיני מול לגו מקורי — the honest comparison (quality, price, legality)
+- סטים תואמים מול המקור — the honest comparison (quality, price, legality)
 - הסטים הכי שווים באליאקספרס לפי נושא (update quarterly)
-- איך לבדוק מוכר באליאקספרס לפני שקונים לגו
+- איך לבדוק מוכר באליאקספרס לפני שקונים סט
 - MOC מומלצים: Mould King / CaDA / Reobrix — מה ההבדל
 
-Keep every page honest about "compatible, not LEGO". It is a legal necessity
-and, as it happens, what searchers want to know.
+Keep every page honest about "compatible, not the original". It is a legal
+necessity and, as it happens, what searchers want to know. And keep the
+trademark out of the copy — the rule above applies to new pages too.
 
 ### 3. The site keeping working
 
@@ -190,11 +206,11 @@ updating, i.e. the build broke.
 ## Things to know
 
 **Hebrew site, English query.** The site is Hebrew with prices in shekels. It
-will rank in Israel for "aliexpress lego" typed in English — the Latin strings
-"AliExpress" and "LEGO" are on the page for that reason — but it will not rank
-in the US or UK for the same query, and it shouldn't try: those visitors can't
-use shekel prices or Israeli shipping. If you ever want English traffic, that's
-a separate English version with `hreflang` tags, not a tweak.
+can rank in Israel for "aliexpress lego" typed in English — "AliExpress" is on
+the page in Latin letters for that reason — but it will not rank in the US or
+UK for the same query, and it shouldn't try: those visitors can't use shekel
+prices or Israeli shipping. If you ever want English traffic, that's a separate
+English version with `hreflang` tags, not a tweak.
 
 **Don't block `deals.json` in `robots.txt`.** It looks like something to hide
 from crawlers. It isn't: Google renders the home page with JavaScript, and the
@@ -207,12 +223,12 @@ may ignore it or flag it as a warning; it will not hurt the page. If the bot
 ever exports the review count, put it in `ratingCount` and this becomes a real
 rich result.
 
-**The customs claim** on the home page guide and `how-it-works.html` ("orders
-up to $75 are tax-free") reflects the rule at time of writing. Check it against
+**The customs claim** on `guide.html` and `how-it-works.html` ("orders up to
+$75 are tax-free") reflects the rule at time of writing. Check it against
 the tax authority once in a while; if it changes, both pages need editing.
 
-**Two pages are hand-written, not generated.** `index.html` and
-`how-it-works.html` must be copied to the web root after editing —
+**Three pages are hand-written, not generated.** `index.html`, `guide.html`
+and `how-it-works.html` must be copied to the web root after editing —
 `deploy/README.md` has the exact command. Forgetting this is the most likely
 way for the live site to drift from the repo.
 

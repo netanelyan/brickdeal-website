@@ -9,7 +9,7 @@ root README still describes — see "Superseded" below.
 ```
 /opt/brickdeal-site/        this repo — the source
 /var/www/brickdeal/         the served root
-  index.html, how-it-works.html, assets/, robots.txt
+  index.html, guide.html, how-it-works.html, assets/, robots.txt
                                     copied from the source
   favicon.ico                       copied from the source — see note below
   deals.json                        written by the bot on each post
@@ -43,17 +43,17 @@ repo, not this one.
 
 ## Static pages are copied, not built
 
-`index.html` and `how-it-works.html` are hand-written and never touched by
-`build.js`. After editing either one (or anything in `assets/`), copy it to the
-web root yourself — the build timer will not do it:
+`index.html`, `guide.html` and `how-it-works.html` are hand-written and never
+touched by `build.js`. After editing any of them (or anything in `assets/`),
+copy it to the web root yourself — the build timer will not do it:
 
 ```
-cp /opt/brickdeal-site/{index.html,how-it-works.html,robots.txt,favicon.ico} /var/www/brickdeal/
+cp /opt/brickdeal-site/{index.html,guide.html,how-it-works.html,robots.txt,favicon.ico} /var/www/brickdeal/
 cp -r /opt/brickdeal-site/assets /var/www/brickdeal/
 ```
 
-`sitemap.xml` lists `how-it-works.html` (see `STATIC_PAGES` in `build.js`), so
-a new static page needs an entry there too or crawlers won't be told about it.
+`sitemap.xml` lists the static pages via `STATIC_PAGES` in `build.js`, so a
+new static page needs an entry there too or crawlers won't be told about it.
 
 ## Why a timer and not a hook on each feed write
 

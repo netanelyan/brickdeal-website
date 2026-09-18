@@ -5,7 +5,8 @@ searchable; the deal pages and archive are static HTML generated from the feed,
 so search engines have something real to index.
 
 ```
-index.html            searchable catalog (client-side) + static guide copy for crawlers
+index.html            searchable catalog (client-side)
+guide.html            static page: first-time buyer guide (quality, shipping, customs, MOC)
 how-it-works.html     static page: how deals are found, how we earn, what "compatible" means
 SEO.md                how to get the site into Google — Search Console, sitemap, links
 assets/styles.css      brand tokens + layout
@@ -151,17 +152,22 @@ Setup and ongoing work live in **[SEO.md](SEO.md)**. What the code does:
 - **Static page per deal** (`deal/<id>.html`): own `<title>`, description, Open
   Graph `product` tags, `Product` + `BreadcrumbList` JSON-LD, and a
   related-deals block linking four other deal pages.
-- **Static page per theme** (`theme/<key>.html`): "לגו הארי פוטר מאליאקספרס"
-  and so on — the long-tail landing pages. Lists every deal in the theme as a
-  card linking to its deal page, with `ItemList` JSON-LD. Only themes that have
-  deals get a page.
-- **Indexable copy on the home page**: the catalog is client-rendered, so the
-  guide section under it is most of what a crawler reads on first fetch. The
-  title, H1 and description target "לגו סיני" / "לגו אליאקספרס" / "aliexpress lego".
+- **Static page per theme** (`theme/<key>.html`): "הארי פוטר - אבני בנייה
+  תואמות מאליאקספרס" and so on — the long-tail landing pages. Lists every deal
+  in the theme as a card linking to its deal page, with `ItemList` JSON-LD.
+  Only themes that have deals get a page.
+- **Static copy pages** `guide.html` and `how-it-works.html`: the catalog is
+  client-rendered, so these are most of the prose a crawler gets. The home
+  page links both (teaser box + footer).
 - `archive.html` and the theme chip rows link everything in plain HTML, so
   crawlers reach every page without JavaScript or the sitemap.
-- `sitemap.xml` lists home, archive, `how-it-works.html`, every theme page and
+- `sitemap.xml` lists home, archive, the static pages, every theme page and
   every deal page. Static pages are enumerated in `STATIC_PAGES` in `build.js`.
+
+**Copy rule:** the original brand's trademark never appears in site copy
+outside the footer disclaimer and the "לפני שקונים" note. The vocabulary is
+"אבני בנייה תואמות" / "סטים תואמים" / "המותג המקורי". This costs some keyword
+match against what people actually type — see SEO.md — and is deliberate.
 
 Cards on the home page link straight to AliExpress (they must — that's the
 affiliate click). Deal pages are reached through theme pages, related-deal

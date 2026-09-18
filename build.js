@@ -33,15 +33,20 @@ const FEED = argOf('--feed', 'deals.json');
 const BASE = argOf('--base', 'https://brickdealil.com').replace(/\/$/, '');
 const OUT = argOf('--out', '.');
 
-/* Theme landing pages target the long-tail searches ("לגו הארי פוטר זול",
-   "לגו טכניק אליאקספרס") and are the main internal-link path into the deal
-   pages, which the home page can't provide — its cards must go to AliExpress.
-   Related-deal blocks on each deal page do the same job one level down. */
+/* Theme landing pages target the long-tail searches ("הארי פוטר אליאקספרס",
+   "טכניק תואם זול") and are the main internal-link path into the deal pages,
+   which the home page can't provide - its cards must go to AliExpress.
+   Related-deal blocks on each deal page do the same job one level down.
+
+   Copy rule for everything generated here: the original brand's trademark
+   never appears outside the footer disclaimer. "תואם" / "אבני בנייה תואמות"
+   is the vocabulary. */
 const RELATED_COUNT = 4;
 
 /* Hand-written pages at the root that the sitemap must list. index.html is
    the home page; the rest are static copy. Not generated — just enumerated. */
 const STATIC_PAGES = [
+  { path: 'guide.html', freq: 'monthly', pri: '0.6' },
   { path: 'how-it-works.html', freq: 'monthly', pri: '0.5' },
 ];
 
@@ -178,6 +183,7 @@ ${body}
       <a href="https://www.instagram.com/brickdealil/" rel="noopener">אינסטגרם</a>
       <a href="https://www.tiktok.com/@brickdealil" rel="noopener">טיקטוק</a>
       <a href="${up}archive.html">ארכיון הדילים</a>
+      <a href="${up}guide.html">המדריך</a>
       <a href="${up}how-it-works.html">איך זה עובד</a>
     </p>
     <p class="site-footer__disclosure">
@@ -259,7 +265,7 @@ function dealPage(d, id, { related, themes }) {
   const descBits = [`${money(d.price)} ₪`];
   if (d.pieces) descBits.push(`${d.pieces} חלקים`);
   if (d.setId) descBits.push(`מק״ט ${d.setId}`);
-  const description = `${d.name} — ${descBits.join(' · ')}. סט תואם לגו מאליאקספרס במחיר בשקלים, משלוח 2-4 שבועות. ${themeName ? 'לגו ' + themeName + '. ' : ''}`.trim();
+  const description = `${d.name} — ${descBits.join(' · ')}. סט אבני בנייה תואם מאליאקספרס במחיר בשקלים, משלוח 2-4 שבועות. ${themeName ? 'נושא: ' + themeName + '. ' : ''}`.trim();
 
   const product = {
     '@context': 'https://schema.org',
@@ -300,7 +306,7 @@ function dealPage(d, id, { related, themes }) {
 
   // Related deals: same theme first, newest overall otherwise. Either way the
   // page links onward to other deal pages, so none of them is a dead end.
-  const relatedTitle = themeKey ? `עוד דילים על לגו ${THEME_LABELS[themeKey]}` : 'דילים נוספים';
+  const relatedTitle = themeKey ? `עוד דילים בנושא ${THEME_LABELS[themeKey]}` : 'דילים נוספים';
   const relatedMore = themeKey
     ? `<a class="related__more" href="../theme/${esc(themeKey)}.html">לכל הדילים ב${esc(THEME_LABELS[themeKey])} ←</a>`
     : `<a class="related__more" href="../archive.html">לארכיון הדילים ←</a>`;
@@ -334,8 +340,8 @@ ${related.map((r) => cardHtml(r, '../')).join('\n')}
     </ul>` : ''}
 
     <p><a class="btn btn--tg btn--lg" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">לצפייה באליאקספרס</a></p>
-    <p class="page-sub">זהו סט אבני בנייה <strong>תואם לגו</strong>, לא מוצר LEGO® מקורי. משלוח 2-4 שבועות מסין.
-    המחיר משתנה — המחיר המחייב הוא זה שמופיע בדף המוצר. <a href="../how-it-works.html">איך זה עובד?</a></p>
+    <p class="page-sub">זהו סט אבני בנייה <strong>תואם</strong>, לא מוצר LEGO® מקורי. משלוח 2-4 שבועות מסין.
+    המחיר משתנה — המחיר המחייב הוא זה שמופיע בדף המוצר. <a href="../guide.html">מזמינים בפעם הראשונה?</a></p>
   </div>
 </article>
 ${relatedHtml}
@@ -363,7 +369,7 @@ function themePage({ key, label, rows }, themes) {
   const itemList = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `לגו ${label} מאליאקספרס`,
+    name: `${label} - סטים תואמים מאליאקספרס`,
     numberOfItems: n,
     itemListElement: rows.map(({ d, id }, i) => ({
       '@type': 'ListItem', position: i + 1, name: d.name, url: `${BASE}/deal/${id}.html`,
@@ -379,19 +385,19 @@ function themePage({ key, label, rows }, themes) {
   };
 
   const body = `<nav class="breadcrumb" aria-label="מיקום"><a href="../">דילים</a> › ${esc(label)}</nav>
-<h1 class="page-title">לגו ${esc(label)} מאליאקספרס</h1>
-<p class="page-sub">${n} סטים תואמי לגו בנושא ${esc(label)} שמצאנו באליאקספרס, במחירים בשקלים.
+<h1 class="page-title">${esc(label)} - אבני בנייה תואמות מאליאקספרס</h1>
+<p class="page-sub">${n} סטים תואמים בנושא ${esc(label)} שמצאנו באליאקספרס, במחירים בשקלים.
 לחיפוש וסינון לפי מחיר ומספר חלקים עברו <a href="../?theme=${esc(encodeURIComponent(key))}">לדף הראשי</a>.</p>
 ${themeChips(themes, '../', key)}
 <div class="grid grid--static">
 ${rows.map((r) => cardHtml(r, '../')).join('\n')}
 </div>
-<p class="page-sub related__note">אלו סטים <strong>תואמים</strong>, לא מוצרי LEGO® מקוריים. הכרטיס מוביל לדף הדיל, ומשם לאליאקספרס.
-המחירים נבדקים מדי לילה — המחיר המחייב הוא זה שבדף המוצר. <a href="../how-it-works.html">איך זה עובד?</a></p>`;
+<p class="page-sub related__note">אלו סטים <strong>תואמים</strong> מיצרנים אחרים, לא מוצרי המותג המקורי. הכרטיס מוביל לדף הדיל, ומשם לאליאקספרס.
+המחירים נבדקים כל לילה. המחיר המחייב הוא זה שבדף המוצר. <a href="../guide.html">מזמינים בפעם הראשונה?</a></p>`;
 
   return shell({
-    title: `לגו ${label} מאליאקספרס – ${n} סטים תואמי לגו בזול | BrickDeal`,
-    description: `כל הדילים על סטים תואמי לגו ${label} מאליאקספרס: ${n} סטים במחירים בשקלים, עם מספר חלקים ודירוג. מתעדכן כל יום.`,
+    title: `${label} - ${n} סטים תואמים מאליאקספרס במחיר זול | BrickDeal`,
+    description: `כל הדילים על סטים של אבני בנייה תואמות בנושא ${label} מאליאקספרס: ${n} סטים במחירים בשקלים, עם מספר חלקים ודירוג. מתעדכן כל יום.`,
     canonical,
     body,
     extraHead: `<script type="application/ld+json">${jsonld(itemList)}</script>\n<script type="application/ld+json">${jsonld(breadcrumb)}</script>`,
@@ -400,7 +406,7 @@ ${rows.map((r) => cardHtml(r, '../')).join('\n')}
 
 function archivePage(rows, themes) {
   const body = `<h1 class="page-title">ארכיון הדילים</h1>
-<p class="page-sub">כל ${rows.length} הדילים על סטים תואמי לגו מאליאקספרס שפורסמו, מהחדש לישן. לחיפוש וסינון עברו <a href="./">לדף הראשי</a>.</p>
+<p class="page-sub">כל ${rows.length} הדילים על סטים תואמים מאליאקספרס שפורסמו, מהחדש לישן. לחיפוש וסינון עברו <a href="./">לדף הראשי</a>.</p>
 ${themes.length ? themeChips(themes, '', null) : ''}
 <ul class="archive__list">
 ${rows.map(({ d, id }) => `  <li><a href="deal/${esc(id)}.html"><span>${esc(d.name)}</span><span class="archive__price">${esc(money(d.price))} ₪</span></a></li>`).join('\n')}
