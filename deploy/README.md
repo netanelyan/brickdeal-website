@@ -9,10 +9,12 @@ root README still describes — see "Superseded" below.
 ```
 /opt/brickdeal-site/        this repo — the source
 /var/www/brickdeal/         the served root
-  index.html, assets/, robots.txt   copied from the source
+  index.html, how-it-works.html, assets/, robots.txt
+                                    copied from the source
   favicon.ico                       copied from the source — see note below
   deals.json                        written by the bot on each post
-  deal/ -> .releases/<ts>/          symlink, swapped atomically per build
+  deal/  -> .releases/<ts>/deal/    symlink, swapped atomically per build
+  theme/ -> .releases/<ts>/theme/   symlink, same release as deal/
   archive.html, sitemap.xml         generated
   .releases/, .staging-*            hidden from Caddy by `hide .*`
 ```
@@ -32,12 +34,26 @@ has to be copied alongside `index.html`; it is not covered by copying `assets/`.
 | File | Installs to | Purpose |
 |---|---|---|
 | `Caddyfile` | `/etc/caddy/Caddyfile` | TLS for apex + www, www 301s to apex |
-| `brickdeal-build.sh` | `/usr/local/bin/` | Regenerates deal pages, archive, sitemap |
+| `brickdeal-build.sh` | `/usr/local/bin/` | Regenerates deal pages, theme pages, archive, sitemap |
 | `brickdeal-build.{service,timer}` | `/etc/systemd/system/` | Runs the above every 2 min |
 | `brickdeal-refresh.{service,timer}` | `/etc/systemd/system/` | Nightly price re-check (03:17) |
 
 `brickdeal-refresh.service` runs `scripts/refresh-deals.js` from the **bot**
 repo, not this one.
+
+## Static pages are copied, not built
+
+`index.html` and `how-it-works.html` are hand-written and never touched by
+`build.js`. After editing either one (or anything in `assets/`), copy it to the
+web root yourself — the build timer will not do it:
+
+```
+cp /opt/brickdeal-site/{index.html,how-it-works.html,robots.txt,favicon.ico} /var/www/brickdeal/
+cp -r /opt/brickdeal-site/assets /var/www/brickdeal/
+```
+
+`sitemap.xml` lists `how-it-works.html` (see `STATIC_PAGES` in `build.js`), so
+a new static page needs an entry there too or crawlers won't be told about it.
 
 ## Why a timer and not a hook on each feed write
 

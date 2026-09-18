@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Regenerate the crawlable half of the site (deal/*.html, archive.html,
-# sitemap.xml) from the live deals.json feed.
+# Regenerate the crawlable half of the site (deal/*.html, theme/*.html,
+# archive.html, sitemap.xml) from the live deals.json feed.
 #
 # WHY A TIMER RATHER THAN A HOOK ON EACH FEED WRITE
 #
@@ -64,11 +64,18 @@ mkdir -p "$STAGING" "$RELEASES"
 node "$SITE_SRC/build.js" --feed "$FEED" --base "$BASE" --out "$STAGING"
 
 # Promote. Renaming a symlink onto itself is atomic, so a request sees either
-# the whole old release or the whole new one, never a partial tree.
-mv "$STAGING/deal" "$RELEASES/$TS"
+# the whole old release or the whole new one, never a partial tree. One release
+# directory holds both generated trees, so deal/ and theme/ can't come from
+# different builds (a theme page must link only to deal pages that exist).
+mkdir -p "$RELEASES/$TS"
+for d in deal theme; do
+  mv "$STAGING/$d" "$RELEASES/$TS/$d"
+done
 chmod -R a+rX "$RELEASES/$TS"
-ln -sfn ".releases/$TS" "$WEB_ROOT/.deal-next"
-mv -Tf "$WEB_ROOT/.deal-next" "$WEB_ROOT/deal"
+for d in deal theme; do
+  ln -sfn ".releases/$TS/$d" "$WEB_ROOT/.$d-next"
+  mv -Tf "$WEB_ROOT/.$d-next" "$WEB_ROOT/$d"
+done
 
 # Same-filesystem renames, atomic per file.
 for f in archive.html sitemap.xml; do
@@ -81,9 +88,10 @@ done
 # Caddy must be able to traverse the release dirs it serves through the symlink.
 chmod a+rX "$RELEASES"
 
-# Prune superseded releases, keeping a few for a fast manual rollback:
-#   ln -sfn .releases/<older> /var/www/brickdeal/.deal-next
+# Prune superseded releases, keeping a few for a fast manual rollback (repeat
+# for theme):
+#   ln -sfn .releases/<older>/deal /var/www/brickdeal/.deal-next
 #   mv -Tf /var/www/brickdeal/.deal-next /var/www/brickdeal/deal
 ls -1dt "$RELEASES"/*/ 2>/dev/null | tail -n +$((KEEP_RELEASES + 1)) | xargs -r rm -rf
 
-log "rebuilt -> .releases/$TS ($(ls -1 "$RELEASES/$TS" | wc -l) pages)"
+log "rebuilt -> .releases/$TS ($(ls -1 "$RELEASES/$TS/deal" | wc -l) deal pages, $(ls -1 "$RELEASES/$TS/theme" | wc -l) theme pages)"

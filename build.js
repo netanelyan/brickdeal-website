@@ -3,8 +3,9 @@
  * Generates the crawlable half of the site from deals.json:
  *
  *   deal/<productId>.html   one static page per deal, own title/description/OG/JSON-LD
+ *   theme/<theme>.html      one landing page per theme, linking every deal in it
  *   archive.html            plain-HTML index linking every deal page
- *   sitemap.xml             every URL above
+ *   sitemap.xml             every URL above (plus the static pages at the root)
  *
  * The home page stays client-side and searchable; these pages exist so Google
  * has real HTML to index instead of an empty shell.
@@ -31,6 +32,18 @@ const argOf = (flag, fallback) => {
 const FEED = argOf('--feed', 'deals.json');
 const BASE = argOf('--base', 'https://brickdealil.com').replace(/\/$/, '');
 const OUT = argOf('--out', '.');
+
+/* Theme landing pages target the long-tail searches ("לגו הארי פוטר זול",
+   "לגו טכניק אליאקספרס") and are the main internal-link path into the deal
+   pages, which the home page can't provide — its cards must go to AliExpress.
+   Related-deal blocks on each deal page do the same job one level down. */
+const RELATED_COUNT = 4;
+
+/* Hand-written pages at the root that the sitemap must list. index.html is
+   the home page; the rest are static copy. Not generated — just enumerated. */
+const STATIC_PAGES = [
+  { path: 'how-it-works.html', freq: 'monthly', pri: '0.5' },
+];
 
 const TELEGRAM = 'https://t.me/+juxUyQ49on1mZGRk';
 
@@ -93,10 +106,13 @@ let PLACEHOLDER_FEED = false;
 
 const DEV_BANNER = '<div class="dev-banner">⚠ נתוני דוגמה — הקישורים אינם אמיתיים. אין להעלות גרסה זו לאוויר.</div>';
 
-function shell({ title, description, canonical, ogImage, body, extraHead = '' }) {
-  // Deal pages live in deal/, everything else at the root. One prefix, applied
-  // to every same-origin URL below, so the two cases cannot drift apart.
-  const up = canonical.includes('/deal/') ? '../' : '';
+/** Site-relative prefix for a page: deal/ and theme/ sit a directory down. */
+const upOf = (canonical) => (/\/(deal|theme)\//.test(canonical) ? '../' : '');
+
+function shell({ title, description, canonical, ogImage, ogType = 'website', body, extraHead = '' }) {
+  // One prefix, applied to every same-origin URL below, so the root and
+  // subdirectory cases cannot drift apart.
+  const up = upOf(canonical);
 
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -106,8 +122,9 @@ function shell({ title, description, canonical, ogImage, body, extraHead = '' })
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${esc(canonical)}">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="theme-color" content="#17181C">
-<meta property="og:type" content="website">
+<meta property="og:type" content="${esc(ogType)}">
 <meta property="og:site_name" content="BrickDeal">
 <meta property="og:locale" content="he_IL">
 <meta property="og:title" content="${esc(title)}">
@@ -115,6 +132,9 @@ function shell({ title, description, canonical, ogImage, body, extraHead = '' })
 <meta property="og:url" content="${esc(canonical)}">
 <meta property="og:image" content="${esc(ogImage || OG_CARD)}">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(title)}">
+<meta name="twitter:description" content="${esc(description)}">
+<meta name="twitter:image" content="${esc(ogImage || OG_CARD)}">
 <link rel="icon" href="${up}${BRAND}/favicon/favicon.ico" sizes="32x32">
 <link rel="icon" href="${up}${BRAND}/favicon/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${up}${BRAND}/favicon/apple-touch-icon.png">
@@ -158,6 +178,7 @@ ${body}
       <a href="https://www.instagram.com/brickdealil/" rel="noopener">אינסטגרם</a>
       <a href="https://www.tiktok.com/@brickdealil" rel="noopener">טיקטוק</a>
       <a href="${up}archive.html">ארכיון הדילים</a>
+      <a href="${up}how-it-works.html">איך זה עובד</a>
     </p>
     <p class="site-footer__disclosure">
       גילוי נאות: הקישורים באתר הם קישורי שותפים לאליאקספרס. אם תרכשו דרכם, נקבל עמלה מאליאקספרס.
@@ -178,12 +199,46 @@ ${body}
 `;
 }
 
-function dealPage(d, id) {
+const themeOf = (d) => (d.theme && THEME_LABELS[d.theme] ? d.theme : null);
+const themeUrl = (key) => `${BASE}/theme/${key}.html`;
+
+/** Static card, same markup and classes the client grid builds — but it links
+ *  to the deal page, not to AliExpress. That is the point: these are the
+ *  internal links that get deal pages crawled. `up` is the page's prefix. */
+function cardHtml({ d, id }, up) {
+  const { series, title } = splitName(d.name);
+  const meta = [];
+  if (d.pieces) meta.push(`<span class="card__meta-item"><bdi>${esc(new Intl.NumberFormat('en-US').format(d.pieces))} חלקים</bdi></span>`);
+  if (d.setId) meta.push(`<span class="card__meta-item"><bdi>מק״ט ${esc(d.setId)}</bdi></span>`);
+  if (d.stars) meta.push(`<span class="card__meta-item"><span class="card__star">★</span><bdi>${esc(Number(d.stars).toFixed(1))}</bdi></span>`);
+
+  return `<a class="card" href="${up}deal/${esc(id)}.html">
+    <div class="card__media${isRender(d) ? ' card__media--render' : ''}">
+      <img class="card__img" src="${esc(d.image || `${up}${DEAL_IMAGE_FALLBACK}`)}" alt="${esc(d.name)}" width="400" height="400" loading="lazy" decoding="async">
+    </div>
+    <div class="card__body">
+      <div class="card__price"><span class="card__amount">${esc(money(d.price))}</span><span class="card__currency">₪</span></div>
+      ${series ? `<span class="card__series">${esc(series)}</span>` : ''}
+      <h3 class="card__name">${esc(title)}</h3>
+      ${meta.length ? `<p class="card__meta">${meta.join('')}</p>` : ''}
+    </div>
+  </a>`;
+}
+
+/** Scrolling chip row linking every theme page; `current` renders as "on". */
+function themeChips(themes, up, current) {
+  return `<nav class="chips chips--static" aria-label="לפי נושא">
+${themes.map(({ key, label, rows }) => `  <a class="chip${key === current ? ' is-on' : ''}" href="${up}theme/${esc(key)}.html"${key === current ? ' aria-current="page"' : ''}>${esc(label)} <span class="chip__n">${rows.length}</span></a>`).join('\n')}
+</nav>`;
+}
+
+function dealPage(d, id, { related, themes }) {
   const canonical = `${BASE}/deal/${id}.html`;
   // "<series> | <product>" — the series is shown as an eyebrow and the product
   // as the heading; d.name stays the full string wherever the deal is *named*.
   const { series, title } = splitName(d.name);
-  const themeName = (d.theme && THEME_LABELS[d.theme]) || series || null;
+  const themeKey = themeOf(d);
+  const themeName = (themeKey && THEME_LABELS[themeKey]) || series || null;
 
   // Trusted only when genuinely above the sale price — never derived.
   const was = Number(d.originalPrice) > Number(d.price) ? Number(d.originalPrice) : null;
@@ -204,18 +259,20 @@ function dealPage(d, id) {
   const descBits = [`${money(d.price)} ₪`];
   if (d.pieces) descBits.push(`${d.pieces} חלקים`);
   if (d.setId) descBits.push(`מק״ט ${d.setId}`);
-  const description = `${d.name} — ${descBits.join(' · ')}. אבני בנייה תואמות מאליאקספרס, משלוח 2-4 שבועות. ${themeName ? themeName + '. ' : ''}`.trim();
+  const description = `${d.name} — ${descBits.join(' · ')}. סט תואם לגו מאליאקספרס במחיר בשקלים, משלוח 2-4 שבועות. ${themeName ? 'לגו ' + themeName + '. ' : ''}`.trim();
 
   const product = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: d.name,
     description,
+    ...(themeName ? { category: themeName } : {}),
     offers: {
       '@type': 'Offer',
       price: Number(d.price).toFixed(2),
       priceCurrency: d.currency || 'ILS',
       availability: 'https://schema.org/InStock',
+      itemCondition: 'https://schema.org/NewCondition',
       url: d.link,
     },
   };
@@ -229,21 +286,34 @@ function dealPage(d, id) {
     };
   }
 
-  const breadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'דילים', item: `${BASE}/` },
-      { '@type': 'ListItem', position: 2, name: d.name, item: canonical },
-    ],
-  };
+  const crumbs = [{ '@type': 'ListItem', position: 1, name: 'דילים', item: `${BASE}/` }];
+  if (themeKey) crumbs.push({ '@type': 'ListItem', position: 2, name: THEME_LABELS[themeKey], item: themeUrl(themeKey) });
+  crumbs.push({ '@type': 'ListItem', position: crumbs.length + 1, name: d.name, item: canonical });
+  const breadcrumb = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs };
 
-  // The series crumb links to the filtered grid when the theme is known.
+  // The series crumb links to the theme landing page when the theme is known.
   const seriesCrumb = series
-    ? (d.theme && THEME_LABELS[d.theme]
-        ? `<a href="../?theme=${esc(encodeURIComponent(d.theme))}">${esc(series)}</a> › `
+    ? (themeKey
+        ? `<a href="../theme/${esc(themeKey)}.html">${esc(series)}</a> › `
         : `${esc(series)} › `)
     : '';
+
+  // Related deals: same theme first, newest overall otherwise. Either way the
+  // page links onward to other deal pages, so none of them is a dead end.
+  const relatedTitle = themeKey ? `עוד דילים על לגו ${THEME_LABELS[themeKey]}` : 'דילים נוספים';
+  const relatedMore = themeKey
+    ? `<a class="related__more" href="../theme/${esc(themeKey)}.html">לכל הדילים ב${esc(THEME_LABELS[themeKey])} ←</a>`
+    : `<a class="related__more" href="../archive.html">לארכיון הדילים ←</a>`;
+  const relatedHtml = related.length ? `
+<section class="related" aria-labelledby="related-title">
+  <div class="related__head">
+    <h2 class="related__title" id="related-title">${esc(relatedTitle)}</h2>
+    ${relatedMore}
+  </div>
+  <div class="grid">
+${related.map((r) => cardHtml(r, '../')).join('\n')}
+  </div>
+</section>` : '';
   // The render's srcset widths are nominal — Brickset's actual pixel size varies
   // per set, but the small→large ratio (~3.5x) holds, which is all selection needs.
   const body = `<nav class="breadcrumb" aria-label="מיקום"><a href="../">דילים</a> › ${seriesCrumb}${esc(title)}</nav>
@@ -264,24 +334,74 @@ function dealPage(d, id) {
     </ul>` : ''}
 
     <p><a class="btn btn--tg btn--lg" href="${esc(d.link)}" target="_blank" rel="noopener sponsored">לצפייה באליאקספרס</a></p>
-    <p class="page-sub">זהו סט אבני בנייה <strong>תואם</strong>, לא מוצר LEGO® מקורי. משלוח 2-4 שבועות מסין.
-    המחיר משתנה — המחיר המחייב הוא זה שמופיע בדף המוצר.</p>
+    <p class="page-sub">זהו סט אבני בנייה <strong>תואם לגו</strong>, לא מוצר LEGO® מקורי. משלוח 2-4 שבועות מסין.
+    המחיר משתנה — המחיר המחייב הוא זה שמופיע בדף המוצר. <a href="../how-it-works.html">איך זה עובד?</a></p>
   </div>
-</article>`;
+</article>
+${relatedHtml}
+${themes.length ? `\n<h2 class="related__themes-title">לפי נושא</h2>\n${themeChips(themes, '../', themeKey)}` : ''}`;
+
+  // og:type product needs the price tags to go with it, per the OG spec.
+  const productMeta = `<meta property="product:price:amount" content="${esc(Number(d.price).toFixed(2))}">
+<meta property="product:price:currency" content="${esc(d.currency || 'ILS')}">`;
 
   return shell({
     title: `${d.name} – ${money(d.price)} ₪ | BrickDeal`,
     description,
     canonical,
     ogImage: large || d.image,
+    ogType: 'product',
     body,
-    extraHead: `<script type="application/ld+json">${jsonld(product)}</script>\n<script type="application/ld+json">${jsonld(breadcrumb)}</script>`,
+    extraHead: `${productMeta}\n<script type="application/ld+json">${jsonld(product)}</script>\n<script type="application/ld+json">${jsonld(breadcrumb)}</script>`,
   });
 }
 
-function archivePage(rows) {
+function themePage({ key, label, rows }, themes) {
+  const canonical = themeUrl(key);
+  const n = rows.length;
+
+  const itemList = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `לגו ${label} מאליאקספרס`,
+    numberOfItems: n,
+    itemListElement: rows.map(({ d, id }, i) => ({
+      '@type': 'ListItem', position: i + 1, name: d.name, url: `${BASE}/deal/${id}.html`,
+    })),
+  };
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'דילים', item: `${BASE}/` },
+      { '@type': 'ListItem', position: 2, name: label, item: canonical },
+    ],
+  };
+
+  const body = `<nav class="breadcrumb" aria-label="מיקום"><a href="../">דילים</a> › ${esc(label)}</nav>
+<h1 class="page-title">לגו ${esc(label)} מאליאקספרס</h1>
+<p class="page-sub">${n} סטים תואמי לגו בנושא ${esc(label)} שמצאנו באליאקספרס, במחירים בשקלים.
+לחיפוש וסינון לפי מחיר ומספר חלקים עברו <a href="../?theme=${esc(encodeURIComponent(key))}">לדף הראשי</a>.</p>
+${themeChips(themes, '../', key)}
+<div class="grid grid--static">
+${rows.map((r) => cardHtml(r, '../')).join('\n')}
+</div>
+<p class="page-sub related__note">אלו סטים <strong>תואמים</strong>, לא מוצרי LEGO® מקוריים. הכרטיס מוביל לדף הדיל, ומשם לאליאקספרס.
+המחירים נבדקים מדי לילה — המחיר המחייב הוא זה שבדף המוצר. <a href="../how-it-works.html">איך זה עובד?</a></p>`;
+
+  return shell({
+    title: `לגו ${label} מאליאקספרס – ${n} סטים תואמי לגו בזול | BrickDeal`,
+    description: `כל הדילים על סטים תואמי לגו ${label} מאליאקספרס: ${n} סטים במחירים בשקלים, עם מספר חלקים ודירוג. מתעדכן כל יום.`,
+    canonical,
+    body,
+    extraHead: `<script type="application/ld+json">${jsonld(itemList)}</script>\n<script type="application/ld+json">${jsonld(breadcrumb)}</script>`,
+  });
+}
+
+function archivePage(rows, themes) {
   const body = `<h1 class="page-title">ארכיון הדילים</h1>
-<p class="page-sub">כל ${rows.length} הדילים שפורסמו, מהחדש לישן. לחיפוש וסינון עברו <a href="./">לדף הראשי</a>.</p>
+<p class="page-sub">כל ${rows.length} הדילים על סטים תואמי לגו מאליאקספרס שפורסמו, מהחדש לישן. לחיפוש וסינון עברו <a href="./">לדף הראשי</a>.</p>
+${themes.length ? themeChips(themes, '', null) : ''}
 <ul class="archive__list">
 ${rows.map(({ d, id }) => `  <li><a href="deal/${esc(id)}.html"><span>${esc(d.name)}</span><span class="archive__price">${esc(money(d.price))} ₪</span></a></li>`).join('\n')}
 </ul>`;
@@ -294,10 +414,12 @@ ${rows.map(({ d, id }) => `  <li><a href="deal/${esc(id)}.html"><span>${esc(d.na
   });
 }
 
-function sitemap(rows) {
+function sitemap(rows, themes) {
   const urls = [
     { loc: `${BASE}/`, freq: 'daily', pri: '1.0' },
     { loc: `${BASE}/archive.html`, freq: 'daily', pri: '0.8' },
+    ...STATIC_PAGES.map((p) => ({ loc: `${BASE}/${p.path}`, freq: p.freq, pri: p.pri })),
+    ...themes.map(({ key }) => ({ loc: themeUrl(key), freq: 'daily', pri: '0.8' })),
     ...rows.map(({ d, id }) => ({
       loc: `${BASE}/deal/${id}.html`,
       freq: 'weekly',
@@ -362,22 +484,45 @@ function main() {
 
   rows.sort((a, b) => new Date(b.d.postedAt || 0) - new Date(a.d.postedAt || 0));
 
+  // One landing page per theme that actually has deals, in THEME_LABELS order
+  // so the chip row reads the same on every page. Unknown keys get no page —
+  // same rule as the client chips.
+  const themes = Object.keys(THEME_LABELS)
+    .map((key) => ({ key, label: THEME_LABELS[key], rows: rows.filter((r) => themeOf(r.d) === key) }))
+    .filter((t) => t.rows.length);
+
   const dealDir = path.join(OUT, 'deal');
+  const themeDir = path.join(OUT, 'theme');
   fs.mkdirSync(dealDir, { recursive: true });
+  fs.mkdirSync(themeDir, { recursive: true });
 
-  // Clear stale pages so a delisted deal doesn't linger as an orphan URL.
-  for (const f of fs.readdirSync(dealDir)) {
-    if (f.endsWith('.html')) fs.unlinkSync(path.join(dealDir, f));
+  // Clear stale pages so a delisted deal or an emptied theme doesn't linger
+  // as an orphan URL.
+  for (const dir of [dealDir, themeDir]) {
+    for (const f of fs.readdirSync(dir)) {
+      if (f.endsWith('.html')) fs.unlinkSync(path.join(dir, f));
+    }
   }
 
-  for (const { d, id } of rows) {
-    fs.writeFileSync(path.join(dealDir, `${id}.html`), dealPage(d, id), 'utf8');
+  for (const row of rows) {
+    // Same theme first, then the newest deals overall to fill the row — a
+    // theme with two deals shouldn't leave the page with one related card.
+    const key = themeOf(row.d);
+    const sameTheme = key ? themes.find((t) => t.key === key).rows : [];
+    const related = [...sameTheme, ...rows]
+      .filter((r, i, all) => r !== row && all.indexOf(r) === i)
+      .slice(0, RELATED_COUNT);
+    fs.writeFileSync(path.join(dealDir, `${row.id}.html`), dealPage(row.d, row.id, { related, themes }), 'utf8');
   }
 
-  fs.writeFileSync(path.join(OUT, 'archive.html'), archivePage(rows), 'utf8');
-  fs.writeFileSync(path.join(OUT, 'sitemap.xml'), sitemap(rows), 'utf8');
+  for (const t of themes) {
+    fs.writeFileSync(path.join(themeDir, `${t.key}.html`), themePage(t, themes), 'utf8');
+  }
 
-  console.log(`build: ${rows.length} deal pages + archive.html + sitemap.xml → ${path.resolve(OUT)}`);
+  fs.writeFileSync(path.join(OUT, 'archive.html'), archivePage(rows, themes), 'utf8');
+  fs.writeFileSync(path.join(OUT, 'sitemap.xml'), sitemap(rows, themes), 'utf8');
+
+  console.log(`build: ${rows.length} deal pages + ${themes.length} theme pages + archive.html + sitemap.xml → ${path.resolve(OUT)}`);
   if (skipped.length) {
     console.log(`build: skipped ${skipped.length}:`);
     skipped.forEach((s) => console.log(`  - ${s}`));
