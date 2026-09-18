@@ -372,6 +372,8 @@ button, input, select { font: inherit; color: inherit; }
 .ptile__link {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 4px;
   height: 100%;
   padding: 8px;
@@ -384,6 +386,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .ptile__media {
   display: block;
+  width: 100%;
   aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 6px;
