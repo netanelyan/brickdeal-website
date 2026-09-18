@@ -366,9 +366,12 @@ button, input, select { font: inherit; color: inherit; }
 
 /* Center the row when it fits, scroll when it doesn't. `justify-content:
    center` would clip the leading tiles once the row overflows (you can't
-   scroll to them); auto margins on the two ends center without that trap. */
-.ptile:first-child { margin-inline-start: auto; }
-.ptile:last-child { margin-inline-end: auto; }
+   scroll to them). Two zero-width pseudo flex items with auto margins soak
+   up the free space instead - and unlike :first-child/:last-child they don't
+   care that the pool's first and last tiles are usually hidden. */
+.popular__row::before, .popular__row::after { content: ""; flex: none; width: 0; }
+.popular__row::before { margin-inline-start: auto; }
+.popular__row::after { margin-inline-end: auto; }
 .ptile__link {
   display: flex;
   flex-direction: column;
