@@ -141,6 +141,126 @@
       </button>
     </section>
 
+
+    <!-- The sets people search for by name. Static HTML on purpose: the set
+         numbers are the one exact keyword this site can use freely, and a
+         crawler gets them without running the feed. app.js reads the list
+         from these data-set attributes (single source of truth - edit here),
+         fills in the live price and image when the feed has the set, and dims
+         the ones it doesn't. -->
+    <section class="popular" aria-labelledby="popular-title">
+      <div class="popular__head">
+        <h2 class="popular__title" id="popular-title">הסטים הכי מבוקשים</h2>
+        <p class="popular__sub">מה שכולם מחפשים באליאקספרס. יש דיל - רואים מחיר ועוברים ישר אליו.</p>
+      </div>
+      <ol class="popular__row" id="popular">
+      <li class="ptile" data-set="10295">
+        <a class="ptile__link" href="?q=10295">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">פורשה 911</span>
+          <span class="ptile__meta">מק״ט 10295</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="43020">
+        <a class="ptile__link" href="?q=43020">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">גביע העולם</span>
+          <span class="ptile__meta">מק״ט 43020</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="42083">
+        <a class="ptile__link" href="?q=42083">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">בוגאטי שירון</span>
+          <span class="ptile__meta">מק״ט 42083</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="42056">
+        <a class="ptile__link" href="?q=42056">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">פורשה 911 GT3 RS</span>
+          <span class="ptile__meta">מק״ט 42056</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="42115">
+        <a class="ptile__link" href="?q=42115">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">למבורגיני סיאן</span>
+          <span class="ptile__meta">מק״ט 42115</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="42143">
+        <a class="ptile__link" href="?q=42143">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">פרארי דייטונה SP3</span>
+          <span class="ptile__meta">מק״ט 42143</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="10294">
+        <a class="ptile__link" href="?q=10294">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">טיטאניק</span>
+          <span class="ptile__meta">מק״ט 10294</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="10307">
+        <a class="ptile__link" href="?q=10307">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">מגדל אייפל</span>
+          <span class="ptile__meta">מק״ט 10307</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="10280">
+        <a class="ptile__link" href="?q=10280">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">זר פרחים</span>
+          <span class="ptile__meta">מק״ט 10280</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="10281">
+        <a class="ptile__link" href="?q=10281">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">עץ בונסאי</span>
+          <span class="ptile__meta">מק״ט 10281</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="75192">
+        <a class="ptile__link" href="?q=75192">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">מילניום פאלקון</span>
+          <span class="ptile__meta">מק״ט 75192</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="71043">
+        <a class="ptile__link" href="?q=71043">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">טירת הוגוורטס</span>
+          <span class="ptile__meta">מק״ט 71043</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="10300">
+        <a class="ptile__link" href="?q=10300">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">דלוריאן - בחזרה לעתיד</span>
+          <span class="ptile__meta">מק״ט 10300</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      </ol>
+    </section>
+
     <h2 class="page-title" id="catalog">
       <span id="title-count" class="page-title__count"></span>דילים על אבני בנייה תואמות מאליאקספרס
     </h2>

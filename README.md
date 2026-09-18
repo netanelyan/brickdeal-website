@@ -5,7 +5,8 @@ searchable; the deal pages and archive are static HTML generated from the feed,
 so search engines have something real to index.
 
 ```
-index.html            searchable catalog (client-side)
+index.html            searchable catalog (client-side); the "most wanted sets" row is
+                       the <li data-set> list in here - edit it to change the sets
 guide.html            static page: first-time buyer guide (quality, shipping, customs, MOC)
 how-it-works.html     static page: how deals are found, how we earn, what "compatible" means
 SEO.md                how to get the site into Google — Search Console, sitemap, links

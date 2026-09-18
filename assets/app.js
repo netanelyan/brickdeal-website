@@ -63,6 +63,7 @@
     reset: $('reset'), emptyReset: $('empty-reset'),
     grid: $('grid'), count: $('count'), titleCount: $('title-count'),
     featured: $('featured'), heroCount: $('hero-count'), reroll: $('reroll'),
+    popular: $('popular'),
     empty: $('empty'), error: $('error'), errorTitle: $('error-title'), errorSub: $('error-sub'),
     retry: $('retry'), more: $('more'), freshness: $('freshness'), devBanner: $('dev-banner')
   };
@@ -744,6 +745,59 @@
     el.reroll.classList.add('is-spinning');
   }
 
+  /* ---------- popular sets ---------- */
+
+  /* The list lives in index.html as <li data-set="…"> tiles, so it is
+     crawlable and editable without touching this file. Here we only add what
+     the HTML can't know: whether the feed has the set, at what price, and the
+     image. A tile with a deal becomes the affiliate link, like every card; one
+     without becomes a search for the set number instead of a dead end. */
+  function renderPopular() {
+    if (!el.popular) return;
+    var bySet = {};
+    allDeals.forEach(function (d) {
+      if (!d.setId) return;
+      // Several listings of one set survive collapse only when they differ
+      // enough; show the cheapest either way.
+      if (!bySet[d.setId] || d.price < bySet[d.setId].price) bySet[d.setId] = d;
+    });
+
+    Array.prototype.forEach.call(el.popular.querySelectorAll('[data-set]'), function (li) {
+      var d = bySet[li.dataset.set];
+      var a = li.querySelector('.ptile__link');
+      var media = li.querySelector('.ptile__media');
+      var price = li.querySelector('.ptile__price');
+      media.textContent = '';
+
+      var img = document.createElement('img');
+      img.alt = '';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.width = 120;
+      img.height = 120;
+
+      if (d) {
+        li.classList.remove('ptile--none');
+        a.href = d.link;
+        a.rel = 'noopener sponsored';
+        a.target = '_blank';
+        img.src = d.image || PLACEHOLDER_IMG;
+        img.addEventListener('error', function () { img.src = PLACEHOLDER_IMG; media.classList.remove('ptile__media--render'); }, { once: true });
+        media.classList.toggle('ptile__media--render', !!d.sourceImage);
+        price.textContent = money(d.price) + ' ₪';
+      } else {
+        li.classList.add('ptile--none');
+        a.href = '?q=' + encodeURIComponent(li.dataset.set);
+        a.removeAttribute('target');
+        a.removeAttribute('rel');
+        img.src = PLACEHOLDER_IMG;
+        media.classList.remove('ptile__media--render');
+        price.textContent = 'עדיין אין דיל';
+      }
+      media.appendChild(img);
+    });
+  }
+
   function showFreshness() {
     var latest = allDeals.reduce(function (max, d) {
       return d.checkedAt && d.checkedAt > max ? d.checkedAt : max;
@@ -836,6 +890,20 @@
 
   el.retry.addEventListener('click', boot);
 
+  // A tile without a deal links to ?q=<set>. Same page, so apply the search in
+  // place and bring the catalog into view instead of reloading.
+  if (el.popular) {
+    el.popular.addEventListener('click', function (e) {
+      var a = e.target.closest('.ptile--none .ptile__link');
+      if (!a) return;
+      e.preventDefault();
+      el.q.value = a.closest('[data-set]').dataset.set;
+      apply();
+      var catalog = document.getElementById('catalog');
+      if (catalog) catalog.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   window.addEventListener('popstate', function () {
     readState();
     apply();
@@ -861,6 +929,7 @@
         el.chips.hidden = true;
         buildChips();
         renderFeatured();
+        renderPopular();
         showFreshness();
         apply();
       })
