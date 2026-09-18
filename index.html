@@ -145,16 +145,22 @@
     <!-- The sets people search for by name. Static HTML on purpose: the set
          numbers are the one exact keyword this site can use freely, and a
          crawler gets them without running the feed. app.js reads the list
-         from these data-set attributes (single source of truth - edit here),
-         fills in the live price and image when the feed has the set, and dims
-         the ones it doesn't. -->
+         from these attributes (single source of truth - edit here), fills in
+         the live price and image when the feed has the set, and dims the ones
+         it doesn't.
+           data-set  one or more set numbers, space separated; first is shown
+           data-q    keyword aliases, "|" separated, matched as phrases against
+                     the deal name - the fallback when the bot filed the set
+                     under no number or another one
+           data-not  words that disqualify a keyword match (pink roses are not
+                     the red-roses tile) -->
     <section class="popular" aria-labelledby="popular-title">
       <div class="popular__head">
         <h2 class="popular__title" id="popular-title">הסטים הכי מבוקשים</h2>
         <p class="popular__sub">מה שכולם מחפשים באליאקספרס. יש דיל - רואים מחיר ועוברים ישר אליו.</p>
       </div>
       <ol class="popular__row" id="popular">
-      <li class="ptile" data-set="10295">
+      <li class="ptile" data-set="10295" data-q="פורשה 911|porsche 911" data-not="gt3|rsr">
         <a class="ptile__link" href="?q=10295">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">פורשה 911</span>
@@ -162,7 +168,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="43020">
+      <li class="ptile" data-set="43020" data-q="גביע העולם|world cup|מונדיאל">
         <a class="ptile__link" href="?q=43020">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">גביע העולם</span>
@@ -170,7 +176,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="42083">
+      <li class="ptile" data-set="42083" data-q="בוגאטי|bugatti|שירון|chiron">
         <a class="ptile__link" href="?q=42083">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">בוגאטי שירון</span>
@@ -178,7 +184,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="42056">
+      <li class="ptile" data-set="42056" data-q="gt3 rs|911 gt3|911 rsr">
         <a class="ptile__link" href="?q=42056">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">פורשה 911 GT3 RS</span>
@@ -186,7 +192,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="42115">
+      <li class="ptile" data-set="42115" data-q="למבורגיני|lamborghini|סיאן">
         <a class="ptile__link" href="?q=42115">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">למבורגיני סיאן</span>
@@ -194,7 +200,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="42143">
+      <li class="ptile" data-set="42143" data-q="דייטונה|daytona|sp3">
         <a class="ptile__link" href="?q=42143">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">פרארי דייטונה SP3</span>
@@ -202,7 +208,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="10294">
+      <li class="ptile" data-set="10294" data-q="טיטאניק|titanic">
         <a class="ptile__link" href="?q=10294">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">טיטאניק</span>
@@ -210,7 +216,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="10307">
+      <li class="ptile" data-set="10307" data-q="אייפל|eiffel">
         <a class="ptile__link" href="?q=10307">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">מגדל אייפל</span>
@@ -218,7 +224,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="10280">
+      <li class="ptile" data-set="10280" data-q="זר פרחים|flower bouquet">
         <a class="ptile__link" href="?q=10280">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">זר פרחים</span>
@@ -226,7 +232,23 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="10281">
+      <li class="ptile" data-set="10328 40460" data-q="זר ורדים|זר הורדים|roses" data-not="ורוד|pink">
+        <a class="ptile__link" href="?q=10328">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">זר ורדים</span>
+          <span class="ptile__meta">מק״ט 10328</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="10374" data-q="ורדים ורודים|pink roses">
+        <a class="ptile__link" href="?q=10374">
+          <span class="ptile__media" aria-hidden="true"></span>
+          <span class="ptile__name">ורדים ורודים</span>
+          <span class="ptile__meta">מק״ט 10374</span>
+          <span class="ptile__price"></span>
+        </a>
+      </li>
+      <li class="ptile" data-set="10281" data-q="בונסאי|bonsai">
         <a class="ptile__link" href="?q=10281">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">עץ בונסאי</span>
@@ -234,7 +256,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="75192">
+      <li class="ptile" data-set="75192" data-q="מילניום פאלקון|millennium falcon|פאלקון">
         <a class="ptile__link" href="?q=75192">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">מילניום פאלקון</span>
@@ -242,7 +264,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="71043">
+      <li class="ptile" data-set="71043" data-q="הוגוורטס|hogwarts">
         <a class="ptile__link" href="?q=71043">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">טירת הוגוורטס</span>
@@ -250,7 +272,7 @@
           <span class="ptile__price"></span>
         </a>
       </li>
-      <li class="ptile" data-set="10300">
+      <li class="ptile" data-set="10300" data-q="דלוריאן|delorean|מכונית הזמן|מכונת הזמן|בחזרה לעתיד">
         <a class="ptile__link" href="?q=10300">
           <span class="ptile__media" aria-hidden="true"></span>
           <span class="ptile__name">דלוריאן - בחזרה לעתיד</span>

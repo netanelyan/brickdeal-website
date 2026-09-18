@@ -754,16 +754,46 @@
      without becomes a search for the set number instead of a dead end. */
   function renderPopular() {
     if (!el.popular) return;
-    var bySet = {};
-    allDeals.forEach(function (d) {
-      if (!d.setId) return;
-      // Several listings of one set survive collapse only when they differ
-      // enough; show the cheapest either way.
-      if (!bySet[d.setId] || d.price < bySet[d.setId].price) bySet[d.setId] = d;
+    var tiles = Array.prototype.slice.call(el.popular.querySelectorAll('[data-set]'));
+    var match = {};      // tile index -> deal
+    var claimed = [];    // deals already owned by a tile
+
+    function cheapest(list) {
+      return list.reduce(function (best, d) { return !best || d.price < best.price ? d : best; }, null);
+    }
+    function hasPhrase(hay, phrase) {
+      return (' ' + hay + ' ').indexOf(' ' + fold(phrase) + ' ') !== -1;
+    }
+    function split(v) {
+      return String(v || '').split('|').map(function (x) { return x.trim(); }).filter(Boolean);
+    }
+
+    // Pass 1: set numbers. The bot's names are often generic ("מכונית ספורט"
+    // for a Bugatti), so the number is the reliable key and gets priority.
+    tiles.forEach(function (li, i) {
+      var ids = li.dataset.set.split(/\s+/);
+      var d = cheapest(allDeals.filter(function (x) { return x.setId && ids.indexOf(x.setId) !== -1; }));
+      if (d) { match[i] = d; claimed.push(d); }
     });
 
-    Array.prototype.forEach.call(el.popular.querySelectorAll('[data-set]'), function (li) {
-      var d = bySet[li.dataset.set];
+    // Pass 2: keyword aliases, for sets the bot filed under no number or a
+    // different one. Phrase match on the folded name; data-not disqualifies.
+    tiles.forEach(function (li, i) {
+      if (match[i]) return;
+      var aliases = split(li.dataset.q);
+      var nots = split(li.dataset.not);
+      if (!aliases.length) return;
+      var d = cheapest(allDeals.filter(function (x) {
+        if (claimed.indexOf(x) !== -1) return false;
+        var hay = fold(x.name);
+        if (nots.some(function (n) { return hasPhrase(hay, n); })) return false;
+        return aliases.some(function (q) { return hasPhrase(hay, q); });
+      }));
+      if (d) { match[i] = d; claimed.push(d); }
+    });
+
+    tiles.forEach(function (li, i) {
+      var d = match[i];
       var a = li.querySelector('.ptile__link');
       var media = li.querySelector('.ptile__media');
       var price = li.querySelector('.ptile__price');
@@ -787,7 +817,7 @@
         price.textContent = money(d.price) + ' ₪';
       } else {
         li.classList.add('ptile--none');
-        a.href = '?q=' + encodeURIComponent(li.dataset.set);
+        a.href = '?q=' + encodeURIComponent(li.dataset.set.split(/\s+/)[0]);
         a.removeAttribute('target');
         a.removeAttribute('rel');
         img.src = PLACEHOLDER_IMG;
@@ -897,7 +927,7 @@
       var a = e.target.closest('.ptile--none .ptile__link');
       if (!a) return;
       e.preventDefault();
-      el.q.value = a.closest('[data-set]').dataset.set;
+      el.q.value = a.closest('[data-set]').dataset.set.split(/\s+/)[0];
       apply();
       var catalog = document.getElementById('catalog');
       if (catalog) catalog.scrollIntoView({ behavior: 'smooth', block: 'start' });
