@@ -1,12 +1,14 @@
 /* BrickDeal — brand tokens.
-   The price is the only loud element on the page. Everything else stays quiet. */
+   The price and the Telegram button are the only loud elements on the page.
+   Everything else stays quiet: selection, hover and emphasis are done in white
+   and grey so the amber keeps meaning "money" and "join". */
 
 :root {
   --bg:        #17181C;
   --surface:   #1E2026;
   --surface-2: #262931;
   --line:      #2E313A;
-  --accent:    #F5B41E;
+  --accent:    #F2A93B;   /* the amber block in the logo pack — one yellow, not two */
   --text:      #F5F2EE;
   --muted:     #9A9A92;
   --alert:     #EE4B3C;
@@ -165,7 +167,7 @@ button, input, select { font: inherit; color: inherit; }
   border: 1px solid var(--line);
   background: transparent;
 }
-.btn--more:hover { border-color: var(--accent); color: var(--accent); }
+.btn--more:hover { border-color: var(--muted); color: var(--text); }
 
 /* ---------- hero ---------- */
 
@@ -181,7 +183,13 @@ button, input, select { font: inherit; color: inherit; }
   margin: 0 0 10px;
 }
 
-.hero__hl { color: var(--accent); }
+/* Emphasis without a second slab of amber: a thin rule under the phrase. */
+.hero__hl {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 0.09em;
+  text-underline-offset: 0.16em;
+}
 
 .hero__sub {
   margin: 0;
@@ -240,7 +248,7 @@ button, input, select { font: inherit; color: inherit; }
   padding: 10px;
   transition: border-color .18s ease, transform .18s ease;
 }
-.fcard:hover { border-color: var(--accent); transform: translateY(-2px); }
+.fcard:hover { border-color: var(--muted); transform: translateY(-2px); }
 
 @media (min-width: 560px) {
   .fcard { flex-direction: column; align-items: stretch; text-align: start; padding: 12px; }
@@ -325,8 +333,9 @@ button, input, select { font: inherit; color: inherit; }
   letter-spacing: -0.01em;
 }
 
-/* The count is proof the catalog is real — give it the brand colour. */
-.page-title__count { color: var(--accent); }
+/* The count is proof the catalog is real, but it is not a price — plain white
+   keeps the amber for the numbers that are. */
+.page-title__count { color: var(--text); }
 /* nbsp, not a plain space — a trailing space in ::after content collapses away. */
 .page-title__count:not(:empty)::after { content: "\00a0"; }
 
@@ -358,7 +367,7 @@ button, input, select { font: inherit; color: inherit; }
   font-size: 1rem; /* 16px — stops iOS zooming on focus */
 }
 .search__input::placeholder { color: var(--muted); }
-.search__input:focus { border-color: var(--accent); }
+.search__input:focus { border-color: var(--muted); }
 .search__input::-webkit-search-cancel-button { display: none; }
 
 .search__clear {
@@ -407,10 +416,13 @@ button, input, select { font: inherit; color: inherit; }
 }
 .chip:hover { border-color: var(--muted); }
 
+/* Selected = the same language as the active sort pill (white on a raised
+   surface), so the page has one "on" state rather than a yellow one and a
+   grey one. */
 .chip.is-on {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #17181C;
+  background: var(--surface-2);
+  border-color: var(--text);
+  color: var(--text);
   font-weight: 700;
 }
 
@@ -478,8 +490,8 @@ button, input, select { font: inherit; color: inherit; }
 .more-filters__icon { width: 15px; height: 15px; flex: none; }
 
 .more-filters__count {
-  background: var(--accent);
-  color: #17181C;
+  background: var(--text);
+  color: var(--bg);
   font-size: var(--t-xs);
   font-weight: 800;
   min-width: 19px;
@@ -524,7 +536,7 @@ button, input, select { font: inherit; color: inherit; }
   padding: 10px 12px;
   font-size: 1rem;
 }
-.input:focus { border-color: var(--accent); }
+.input:focus { border-color: var(--muted); }
 .input::placeholder { color: var(--muted); }
 
 .input--num { -moz-appearance: textfield; appearance: textfield; }
@@ -652,7 +664,7 @@ a.card:active { transform: translateY(0); }
 }
 
 .card__meta-item { display: inline-flex; align-items: center; gap: 3px; }
-.card__star { color: var(--accent); }
+.card__star { color: var(--muted); }
 
 .card__checked { color: var(--muted); font-size: var(--t-xs); opacity: 0.75; margin-top: auto; }
 .card__checked--stale { color: var(--alert); opacity: 1; }
@@ -833,7 +845,7 @@ a.card:active { transform: translateY(0); }
   padding: 13px 4px;
   border-bottom: 1px solid var(--line);
 }
-.archive__list a:hover { color: var(--accent); }
+.archive__list a:hover { color: var(--text); }
 .archive__price { color: var(--accent); font-weight: 800; flex: none; }
 
 /* ---------- motion ---------- */
