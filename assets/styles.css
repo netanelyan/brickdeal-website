@@ -259,10 +259,15 @@ button, input, select { font: inherit; color: inherit; }
   .fcard { flex-direction: column; align-items: stretch; text-align: start; padding: 12px; }
 }
 
+/* Every deal image box is a square. `aspect-ratio` alone is only a preferred
+   size: a flex item's automatic minimum is its content, so a portrait photo
+   would stretch the box taller. overflow: hidden zeroes that minimum, and
+   object-fit: contain does the rest. Same on every image box below. */
 .fcard__media {
   flex: none;
   width: 84px;
   aspect-ratio: 1 / 1;
+  overflow: hidden;
   background: var(--bg);
   border-radius: var(--radius-sm);
   padding: 6px;
@@ -374,6 +379,7 @@ button, input, select { font: inherit; color: inherit; }
 .ptile__media {
   display: block;
   aspect-ratio: 1 / 1;
+  overflow: hidden;
   border-radius: 6px;
   background: var(--bg);
   padding: 8%;
@@ -395,11 +401,6 @@ button, input, select { font: inherit; color: inherit; }
 .ptile__meta { color: var(--muted); font-size: var(--t-xs); }
 .ptile__price { color: var(--accent); font-weight: 900; font-size: var(--t-md); margin-top: auto; }
 .ptile__price:empty { display: none; }
-
-/* No deal in the feed for this set: still listed, visibly quieter. */
-.ptile--none .ptile__link { opacity: 0.55; }
-.ptile--none .ptile__link:hover { opacity: 1; }
-.ptile--none .ptile__price { color: var(--muted); font-weight: 500; font-size: var(--t-xs); }
 
 .page-title {
   font-size: var(--t-lg);
@@ -668,6 +669,7 @@ a.card:active { transform: translateY(0); }
 .card__media {
   position: relative;
   aspect-ratio: 1 / 1;
+  overflow: hidden;
   background: var(--bg);
   padding: 10%;
 }
@@ -890,6 +892,7 @@ a.card:active { transform: translateY(0); }
   border-radius: var(--radius);
   padding: 8%;
   aspect-ratio: 1 / 1;
+  overflow: hidden;
 }
 .deal__media img { width: 100%; height: 100%; object-fit: contain; }
 .deal__media--render { background: var(--render-bg); padding: 4%; }

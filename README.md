@@ -6,7 +6,8 @@ so search engines have something real to index.
 
 ```
 index.html            searchable catalog (client-side); the "most wanted sets" row is
-                       the <li data-set> list in here - edit it to change the sets
+                       a pool of <li data-set> tiles in priority order - the first
+                       MAX_POPULAR (app.js) with a live deal are shown, the rest wait
 guide.html            static page: first-time buyer guide (quality, shipping, customs, MOC)
 how-it-works.html     static page: how deals are found, how we earn, what "compatible" means
 SEO.md                how to get the site into Google — Search Console, sitemap, links

@@ -15,6 +15,7 @@
   var STALE_DAYS = 14;
   var STALE_MS = STALE_DAYS * 864e5;
   var MAX_CHIPS = 8;
+  var MAX_POPULAR = 6;        // tiles shown from the popular pool in index.html
 
   /* Keep in sync with bot/themes.js. An unknown key is not an error: the deal
      still shows in the unfiltered grid, it just gets no chip and no badge —
@@ -63,7 +64,7 @@
     reset: $('reset'), emptyReset: $('empty-reset'),
     grid: $('grid'), count: $('count'), titleCount: $('title-count'),
     featured: $('featured'), heroCount: $('hero-count'), reroll: $('reroll'),
-    popular: $('popular'),
+    popular: $('popular'), popularSection: $('popular-section'),
     empty: $('empty'), error: $('error'), errorTitle: $('error-title'), errorSub: $('error-sub'),
     retry: $('retry'), more: $('more'), freshness: $('freshness'), devBanner: $('dev-banner')
   };
@@ -747,11 +748,12 @@
 
   /* ---------- popular sets ---------- */
 
-  /* The list lives in index.html as <li data-set="…"> tiles, so it is
-     crawlable and editable without touching this file. Here we only add what
-     the HTML can't know: whether the feed has the set, at what price, and the
-     image. A tile with a deal becomes the affiliate link, like every card; one
-     without becomes a search for the set number instead of a dead end. */
+  /* The pool lives in index.html as <li data-set="…"> tiles in priority
+     order, so it is crawlable and editable without touching this file. Here
+     we find which of them have a live deal (dead records were already dropped
+     at load), reveal the first MAX_POPULAR of those with price and image, and
+     leave the rest hidden. So when a deal dies the next set in the pool takes
+     its place on the next load, with nobody editing anything. */
   function renderPopular() {
     if (!el.popular) return;
     var tiles = Array.prototype.slice.call(el.popular.querySelectorAll('[data-set]'));
@@ -792,8 +794,12 @@
       if (d) { match[i] = d; claimed.push(d); }
     });
 
+    var shownTiles = 0;
     tiles.forEach(function (li, i) {
       var d = match[i];
+      if (!d || shownTiles >= MAX_POPULAR) { li.hidden = true; return; }
+      shownTiles++;
+
       var a = li.querySelector('.ptile__link');
       var media = li.querySelector('.ptile__media');
       var price = li.querySelector('.ptile__price');
@@ -805,27 +811,20 @@
       img.decoding = 'async';
       img.width = 120;
       img.height = 120;
-
-      if (d) {
-        li.classList.remove('ptile--none');
-        a.href = d.link;
-        a.rel = 'noopener sponsored';
-        a.target = '_blank';
-        img.src = d.image || PLACEHOLDER_IMG;
-        img.addEventListener('error', function () { img.src = PLACEHOLDER_IMG; media.classList.remove('ptile__media--render'); }, { once: true });
-        media.classList.toggle('ptile__media--render', !!d.sourceImage);
-        price.textContent = money(d.price) + ' ₪';
-      } else {
-        li.classList.add('ptile--none');
-        a.href = '?q=' + encodeURIComponent(li.dataset.set.split(/\s+/)[0]);
-        a.removeAttribute('target');
-        a.removeAttribute('rel');
-        img.src = PLACEHOLDER_IMG;
-        media.classList.remove('ptile__media--render');
-        price.textContent = 'עדיין אין דיל';
-      }
+      img.src = d.image || PLACEHOLDER_IMG;
+      img.addEventListener('error', function () { img.src = PLACEHOLDER_IMG; media.classList.remove('ptile__media--render'); }, { once: true });
+      media.classList.toggle('ptile__media--render', !!d.sourceImage);
       media.appendChild(img);
+
+      a.href = d.link;
+      a.rel = 'noopener sponsored';
+      a.target = '_blank';
+      price.textContent = money(d.price) + ' ₪';
+      li.hidden = false;
     });
+
+    // Nothing in the pool is live: no half-empty row, no heading over nothing.
+    if (el.popularSection) el.popularSection.hidden = shownTiles === 0;
   }
 
   function showFreshness() {
@@ -919,20 +918,6 @@
   });
 
   el.retry.addEventListener('click', boot);
-
-  // A tile without a deal links to ?q=<set>. Same page, so apply the search in
-  // place and bring the catalog into view instead of reloading.
-  if (el.popular) {
-    el.popular.addEventListener('click', function (e) {
-      var a = e.target.closest('.ptile--none .ptile__link');
-      if (!a) return;
-      e.preventDefault();
-      el.q.value = a.closest('[data-set]').dataset.set.split(/\s+/)[0];
-      apply();
-      var catalog = document.getElementById('catalog');
-      if (catalog) catalog.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }
 
   window.addEventListener('popstate', function () {
     readState();
