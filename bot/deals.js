@@ -38,6 +38,8 @@ function str(v) {
 /** Build a feed record from the product object made by src/engine.js. */
 export function toRecord(product, now = new Date()) {
   const productId = str(product.productId ?? product.id);
+  // Stored verbatim in its structured "<series> | <product>" form — the site
+  // splits it for display, so the feed and the channel post never disagree.
   const name = str(product.name ?? product.title);
   const link = str(product.link ?? product.affiliateLink ?? product.promotionLink);
 

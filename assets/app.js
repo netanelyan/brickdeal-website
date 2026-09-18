@@ -83,7 +83,7 @@
     return String(s == null ? '' : s)
       .toLowerCase()
       .replace(/[֑-ׇ]/g, '')
-      .replace(/['׳״"`\-–—_.,:;!?()\[\]{}\/\\]/g, ' ')
+      .replace(/['׳״"`\-–—_.,:;!?()\[\]{}\/\\|]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
   }
@@ -107,9 +107,19 @@
 
   /* ---------- data ---------- */
 
+  /* "<series> | <product>" — see assets/name.js. Falls back to a no-op split
+     when the script failed to load, so a missing file costs the eyebrow, not
+     the grid. */
+  function splitName(name) {
+    if (typeof BrickDealName !== 'undefined') return BrickDealName.splitName(name);
+    var s = String(name == null ? '' : name).trim();
+    return { series: null, title: s, full: s };
+  }
+
   function normalize(raw) {
     var price = num(raw.price);
-    var name = String(raw.name || '').trim();
+    var parts = splitName(raw.name);
+    var name = parts.full;
     if (!raw || !raw.link || price === null || !name) return null;
 
     var setId = raw.setId != null && String(raw.setId).trim() !== '' ? String(raw.setId).trim() : null;
@@ -125,7 +135,9 @@
 
     return {
       productId: raw.productId != null ? String(raw.productId) : null,
-      name: name,
+      name: name,               // full structured name — what the channel calls it
+      series: parts.series,     // theme prefix, null on legacy names
+      title: parts.title,       // the product itself
       setId: setId,
       pieces: pieces !== null && pieces > 0 ? Math.round(pieces) : null,
       price: price,
@@ -420,9 +432,16 @@
 
     body.appendChild(priceEl(d.price, 'card__price'));
 
+    if (d.series) {
+      var series = document.createElement('span');
+      series.className = 'card__series';
+      series.textContent = d.series;
+      body.appendChild(series);
+    }
+
     var h = document.createElement('h3');
     h.className = 'card__name';
-    h.textContent = d.name;
+    h.textContent = d.title;
     body.appendChild(h);
 
     // Omit the row entirely when there is nothing to put in it.
@@ -649,9 +668,16 @@
     }
     body.appendChild(prices);
 
+    if (d.series) {
+      var series = document.createElement('span');
+      series.className = 'fcard__series';
+      series.textContent = d.series;
+      body.appendChild(series);
+    }
+
     var h = document.createElement('p');
     h.className = 'fcard__name';
-    h.textContent = d.name;
+    h.textContent = d.title;
     body.appendChild(h);
 
     a.appendChild(body);

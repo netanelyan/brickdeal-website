@@ -1,11 +1,47 @@
 /**
- * Theme detection from the AI-polished Hebrew name. Keyword matching only —
- * no LLM call per deal. Ambiguous names get no theme and simply appear in the
+ * Theme detection from the AI-polished Hebrew name.
+ *
+ * Names are structured "<series> | <product>" — "מלחמת הכוכבים | ספינת X-Wing
+ * אדומה" — so the series is read straight off the prefix and matched against
+ * the theme labels first. Keyword matching over the whole name is the fallback
+ * for a prefix that is not a known theme and for legacy names with no pipe.
+ * No LLM call per deal. Ambiguous names get no theme and simply appear in the
  * unfiltered list, which is the correct failure mode: a wrong theme is worse
  * than a missing one because it hides the deal from the filter it belongs to.
  *
  * Drop in at: src/themes.js
  */
+
+// Separator between the series and the product in a structured name.
+export const NAME_SEP = ' | ';
+
+// The site-facing label for each theme, plus the short forms the bot tends to
+// use as a series prefix. Keep in sync with THEME_LABELS in assets/app.js.
+const LABELS = {
+  'star-wars':    ['מלחמת הכוכבים', 'סטאר וורס'],
+  'harry-potter': ['הארי פוטר'],
+  'superheroes':  ['גיבורי על', 'גיבורי-על', 'מארוול', 'די סי'],
+  'minecraft':    ['מיינקראפט'],
+  'pokemon':      ['פוקימון'],
+  'anime':        ['אנימה'],
+  'ninjago':      ['נינג׳גו'],
+  'disney':       ['דיסני'],
+  'technic':      ['טכניק', 'טכני'],
+  'architecture': ['ארכיטקטורה', 'אדריכלות'],
+  'trains':       ['רכבות'],
+  'boats':        ['ספינות'],
+  'space':        ['חלל'],
+  'military':     ['צבאי'],
+  'dinosaurs':    ['דינוזאורים'],
+  'castle':       ['טירות ואבירים', 'טירות', 'אבירים'],
+  'fantasy':      ['פנטזיה'],
+  'vehicles':     ['רכבים', 'מכוניות'],
+  'flowers':      ['פרחים וצמחים', 'פרחים', 'צמחים', 'בוטני'],
+  'friends':      ['חברות'],
+  'city':         ['עיר'],
+  'duplo':        ['לפעוטות', 'פעוטות'],
+  'creator':      ['קריאייטור'],
+};
 
 // Order matters: the first theme with a keyword hit wins, so put the specific
 // franchises above the generic categories they'd otherwise be swallowed by
@@ -17,6 +53,7 @@ const THEMES = [
                     'באטמן', 'סופרמן', 'וונדר וומן', 'ג׳וקר', 'הג׳וקר', 'באטמוביל', 'גות׳אם', 'גותאם', 'אקווהמן', 'פלאש', 'גיבורי על']],
   ['minecraft',    ['מיינקראפט', 'מיינקרפט', 'קריפר', 'סטיב ואלכס']],
   ['pokemon',      ['פוקימון', 'פיקאצ׳ו', 'פיקאצו', 'צ׳ריזארד']],
+  ['anime',        ['אנימה', 'נארוטו', 'דרגון בול', 'וואן פיס', 'גונדם', 'סיילור מון']],
   ['ninjago',      ['נינג׳גו', 'נינגגו', 'נינג׳ה', 'נינגה', 'דרקון נינ']],
   ['disney',       ['דיסני', 'מיקי מאוס', 'פרוזן', 'אלזה', 'נסיכות', 'ארמון הנסיכות', 'ווינטר', 'סטיץ', 'טוי סטורי']],
   ['technic',      ['טכניק', 'טכני', 'מנוע', 'שלט רחוק', 'גיר', 'מלגזה', 'מנוף', 'טרקטור', 'באגי', 'שנאי', 'הידראול']],
@@ -50,20 +87,54 @@ function fold(s) {
     .trim();
 }
 
-/**
- * @param {string} name Hebrew product name
- * @returns {string|undefined} theme key, or undefined when nothing matches
- */
-export function detectTheme(name) {
-  const hay = fold(name);
-  if (!hay) return undefined;
+const LABEL_TO_KEY = new Map();
+for (const [key, labels] of Object.entries(LABELS)) {
+  for (const l of labels) LABEL_TO_KEY.set(fold(l), key);
+}
 
+/**
+ * Split a structured name into its series and product. Legacy names without a
+ * separator come back with series = undefined and the whole name as the product.
+ * @param {string} name
+ * @returns {{ series: string|undefined, product: string }}
+ */
+export function splitName(name) {
+  const full = String(name || '').replace(/\s+/g, ' ').trim();
+  const m = full.match(/^(.+?)\s*\|\s*(.+)$/);
+  if (!m) return { series: undefined, product: full };
+  return { series: m[1].trim(), product: m[2].trim() };
+}
+
+function keywordTheme(hay) {
   for (const [key, words] of THEMES) {
     for (const w of words) {
       if (hay.includes(fold(w))) return key;
     }
   }
   return undefined;
+}
+
+/**
+ * @param {string} name Hebrew product name, "<series> | <product>" or legacy
+ * @returns {string|undefined} theme key, or undefined when nothing matches
+ */
+export function detectTheme(name) {
+  const { series } = splitName(name);
+
+  // The series prefix is the bot telling us the theme outright: exact label
+  // first, then keywords over the prefix alone so "מלחמת הכוכבים: הקלאסיקה"
+  // still lands. Only the prefix is trusted at this stage — the product half
+  // can mention a Batmobile inside a Technic set.
+  if (series) {
+    const s = fold(series);
+    const exact = LABEL_TO_KEY.get(s);
+    if (exact) return exact;
+    const byWord = keywordTheme(s);
+    if (byWord) return byWord;
+  }
+
+  const hay = fold(name);
+  return hay ? keywordTheme(hay) : undefined;
 }
 
 export const THEME_KEYS = THEMES.map(([k]) => k);

@@ -30,12 +30,13 @@
   'use strict';
 
   /* Hebrew niqqud/cantillation, then punctuation that AI naming varies freely
-     (quotes, dashes, brackets), then whitespace. Deliberately conservative: this
-     only ever runs for records with NO setId, where a false merge is the risk. */
+     (quotes, dashes, brackets, the "series | product" pipe), then whitespace.
+     Deliberately conservative: this only ever runs for records with NO setId,
+     where a false merge is the risk. */
   function normName(s) {
     return String(s == null ? '' : s)
       .replace(/[֑-ׇ]/g, '')
-      .replace(/["'׳״`.,\-–—()[\]:!?]/g, ' ')
+      .replace(/["'׳״`.,\-–—()[\]:!?|]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
       .toLowerCase();

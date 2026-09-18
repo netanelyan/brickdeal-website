@@ -19,6 +19,7 @@
 
 const fs = require('fs');
 const { collapse } = require('./assets/collapse.js');
+const { splitName } = require('./assets/name.js');
 const path = require('path');
 
 const args = process.argv.slice(2);
@@ -118,6 +119,7 @@ ${PLACEHOLDER_FEED ? DEV_BANNER : ''}
     </a>
     <nav class="site-nav" aria-label="ניווט ראשי">
       <a class="site-nav__link" href="https://www.instagram.com/brickdealil/" rel="noopener">אינסטגרם</a>
+      <a class="site-nav__link" href="https://www.tiktok.com/@brickdealil" rel="noopener">טיקטוק</a>
       <a class="btn btn--tg" href="${TELEGRAM}" rel="noopener">ערוץ הטלגרם</a>
     </nav>
   </div>
@@ -139,6 +141,7 @@ ${body}
     <p class="site-footer__links">
       <a href="${TELEGRAM}" rel="noopener">טלגרם</a>
       <a href="https://www.instagram.com/brickdealil/" rel="noopener">אינסטגרם</a>
+      <a href="https://www.tiktok.com/@brickdealil" rel="noopener">טיקטוק</a>
       <a href="${up}archive.html">ארכיון הדילים</a>
     </p>
     <p class="site-footer__disclosure">
@@ -162,7 +165,10 @@ ${body}
 
 function dealPage(d, id) {
   const canonical = `${BASE}/deal/${id}.html`;
-  const themeName = d.theme ? THEME_LABELS[d.theme] : null;
+  // "<series> | <product>" — the series is shown as an eyebrow and the product
+  // as the heading; d.name stays the full string wherever the deal is *named*.
+  const { series, title } = splitName(d.name);
+  const themeName = (d.theme && THEME_LABELS[d.theme]) || series || null;
 
   // Trusted only when genuinely above the sale price — never derived.
   const was = Number(d.originalPrice) > Number(d.price) ? Number(d.originalPrice) : null;
@@ -216,14 +222,21 @@ function dealPage(d, id) {
     ],
   };
 
-  const body = `<nav class="breadcrumb" aria-label="מיקום"><a href="../">דילים</a> › ${esc(d.name)}</nav>
+  // The series crumb links to the filtered grid when the theme is known.
+  const seriesCrumb = series
+    ? (d.theme && THEME_LABELS[d.theme]
+        ? `<a href="../?theme=${esc(encodeURIComponent(d.theme))}">${esc(series)}</a> › `
+        : `${esc(series)} › `)
+    : '';
+  const body = `<nav class="breadcrumb" aria-label="מיקום"><a href="../">דילים</a> › ${seriesCrumb}${esc(title)}</nav>
 
 <article class="deal">
   <div class="deal__media">
     <img src="${esc(d.image || `../${DEAL_IMAGE_FALLBACK}`)}" alt="${esc(d.name)}" width="600" height="600" loading="eager" decoding="async">
   </div>
   <div>
-    <h1 class="deal__title">${esc(d.name)}</h1>
+    ${series ? `<p class="deal__series">${esc(series)}</p>` : ''}
+    <h1 class="deal__title">${esc(title)}</h1>
     <div class="deal__price"><span class="card__amount">${esc(money(d.price))}</span><span class="card__currency">₪</span></div>
     ${was ? `<p class="deal__was"><span class="fcard__was">${esc(money(was))} ₪</span> <span class="fcard__save">${discount}% הנחה</span></p>` : ''}
     <p class="page-sub">המחיר באליאקספרס, כולל משלוח לישראל.</p>

@@ -8,6 +8,7 @@ so search engines have something real to index.
 index.html            searchable catalog (client-side)
 assets/styles.css      brand tokens + layout
 assets/app.js          fetch, search, chips, filters, sort, URL state
+assets/name.js         splits "<series> | <product>" names — shared with build.js
 assets/brand/          logo pack, unpacked as delivered — see its README.txt
 assets/brand/og.png    generated link-preview card — tools/make-og-card.js
 favicon.ico            root copy, for clients that ask for /favicon.ico blind
@@ -55,7 +56,7 @@ are **omitted**, never `null`:
 ```json
 {
   "productId": "1005012557193590",
-  "name": "מכונית פורד אנגליה מעופפת - הארי פוטר",
+  "name": "הארי פוטר | מכונית פורד אנגליה מעופפת",
   "setId": "76470",
   "pieces": 868,
   "price": 129.40,
@@ -73,6 +74,14 @@ are **omitted**, never `null`:
 
 Dropped on load: `"dead": true` or `"available": false`, and anything missing a
 name, price, or link.
+
+`name` is structured `"<series> | <product>"` — the theme the bot filed the
+deal under, a pipe, then the product — stored exactly as the channel post reads.
+The site splits it (`assets/name.js`): the series becomes a small label above
+the product title on cards and deal pages, and the full string stays the name
+in `<title>`, alt text and JSON-LD. Older records without a pipe still work;
+they simply have no series label. `theme` is derived from the series prefix by
+`bot/themes.js`.
 
 ### `originalPrice` — a price claim, treat it as one
 
