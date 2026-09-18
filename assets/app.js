@@ -147,6 +147,9 @@
       currency: raw.currency || 'ILS',
       stars: stars !== null && stars > 0 ? stars : null,
       image: raw.image || null,
+      /* The bot keeps the seller photo here once it has swapped `image` for the
+         official set render — so this being set is what marks a render. */
+      sourceImage: raw.sourceImage || null,
       link: raw.link,
       theme: theme,
       postedAt: toTime(raw.postedAt),
@@ -409,8 +412,9 @@
     a.rel = 'noopener sponsored';
     a.target = '_blank';
 
+    // Official renders are opaque white product shots; they get the white tile.
     var media = document.createElement('div');
-    media.className = 'card__media';
+    media.className = 'card__media' + (d.sourceImage ? ' card__media--render' : '');
 
     var img = document.createElement('img');
     img.className = 'card__img';
@@ -423,6 +427,7 @@
     img.addEventListener('error', function () {
       img.src = PLACEHOLDER_IMG;
       img.classList.add('card__img--failed');
+      media.classList.remove('card__media--render');
     }, { once: true });
     media.appendChild(img);
     a.appendChild(media);
@@ -633,7 +638,7 @@
     a.target = '_blank';
 
     var media = document.createElement('div');
-    media.className = 'fcard__media';
+    media.className = 'fcard__media' + (d.sourceImage ? ' fcard__media--render' : '');
     var img = document.createElement('img');
     img.src = d.image || PLACEHOLDER_IMG;
     img.alt = d.name;
@@ -641,7 +646,10 @@
     img.decoding = 'async';
     img.width = 200;
     img.height = 200;
-    img.addEventListener('error', function () { img.src = PLACEHOLDER_IMG; }, { once: true });
+    img.addEventListener('error', function () {
+      img.src = PLACEHOLDER_IMG;
+      media.classList.remove('fcard__media--render');
+    }, { once: true });
     media.appendChild(img);
     a.appendChild(media);
 

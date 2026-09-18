@@ -49,6 +49,21 @@ const OG_CARD = `${BASE}/${BRAND}/og.png`;
    lockups would show the page through their own letterforms. */
 const DEAL_IMAGE_FALLBACK = `${BRAND}/png/brickdeal-instagram-avatar-dark.png`;
 
+/* When the bot has verified a set number it swaps the seller photo for the
+   official render (Brickset or BrickLink) and keeps the original under
+   `sourceImage` — so `sourceImage` present means `image` is a render: an
+   opaque white-background product shot that gets the white-tile treatment.
+
+   Brickset also serves the same render at ~2150x2400 under /sets/large/. The
+   grid keeps the small one; the deal page and its og:image get the large one.
+   BrickLink has no documented larger variant, so those fall through as-is. */
+const isRender = (d) => Boolean(d.sourceImage && d.image);
+
+function largeRender(url) {
+  const m = /^(https:\/\/images\.brickset\.com\/sets\/)images(\/[^/?#]+)$/.exec(String(url || ''));
+  return m ? `${m[1]}large${m[2]}` : null;
+}
+
 const THEME_LABELS = {
   'harry-potter': 'הארי פוטר', 'star-wars': 'מלחמת הכוכבים', 'superheroes': 'גיבורי על',
   technic: 'טכניק', vehicles: 'רכבים', dinosaurs: 'דינוזאורים', flowers: 'פרחים וצמחים',
@@ -204,7 +219,8 @@ function dealPage(d, id) {
       url: d.link,
     },
   };
-  if (d.image) product.image = d.image;
+  const large = isRender(d) ? largeRender(d.image) : null;
+  if (d.image) product.image = large || d.image;
   if (d.setId) product.sku = d.setId;
   if (d.productId) product.productID = String(d.productId);
   if (d.stars) {
@@ -228,11 +244,13 @@ function dealPage(d, id) {
         ? `<a href="../?theme=${esc(encodeURIComponent(d.theme))}">${esc(series)}</a> › `
         : `${esc(series)} › `)
     : '';
+  // The render's srcset widths are nominal — Brickset's actual pixel size varies
+  // per set, but the small→large ratio (~3.5x) holds, which is all selection needs.
   const body = `<nav class="breadcrumb" aria-label="מיקום"><a href="../">דילים</a> › ${seriesCrumb}${esc(title)}</nav>
 
 <article class="deal">
-  <div class="deal__media">
-    <img src="${esc(d.image || `../${DEAL_IMAGE_FALLBACK}`)}" alt="${esc(d.name)}" width="600" height="600" loading="eager" decoding="async">
+  <div class="deal__media${isRender(d) ? ' deal__media--render' : ''}">
+    <img src="${esc(d.image || `../${DEAL_IMAGE_FALLBACK}`)}"${large ? ` srcset="${esc(d.image)} 618w, ${esc(large)} 2149w" sizes="(min-width: 760px) min(50vw, 560px), 100vw"` : ''} alt="${esc(d.name)}" width="600" height="600" loading="eager" decoding="async">
   </div>
   <div>
     ${series ? `<p class="deal__series">${esc(series)}</p>` : ''}
@@ -255,7 +273,7 @@ function dealPage(d, id) {
     title: `${d.name} – ${money(d.price)} ₪ | BrickDeal`,
     description,
     canonical,
-    ogImage: d.image,
+    ogImage: large || d.image,
     body,
     extraHead: `<script type="application/ld+json">${jsonld(product)}</script>\n<script type="application/ld+json">${jsonld(breadcrumb)}</script>`,
   });

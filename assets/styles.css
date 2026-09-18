@@ -13,6 +13,11 @@
   --muted:     #9A9A92;
   --alert:     #EE4B3C;
 
+  /* Tile behind official set renders (Brickset / BrickLink). Those are opaque
+     JPEG/PNGs on exactly #FFFFFF, so this must stay pure white — any tint
+     would draw the image's own rectangle inside the tile. */
+  --render-bg: #FFFFFF;
+
   --radius:    14px;
   --radius-sm: 9px;
   --wrap:      1180px;
@@ -265,6 +270,11 @@ button, input, select { font: inherit; color: inherit; }
 @media (min-width: 560px) { .fcard__media { width: 100%; padding: 10%; } }
 
 .fcard__media img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Official render: white product tile, tighter padding — the render carries
+   its own margin. Declared after both base rules so it wins at every width. */
+.fcard__media--render { background: var(--render-bg); padding: 3px; }
+@media (min-width: 560px) { .fcard__media--render { padding: 4%; } }
 
 .fcard__body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
 
@@ -598,6 +608,12 @@ a.card:active { transform: translateY(0); }
 }
 
 .card__img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Official set render (feed record carries sourceImage): an opaque white
+   product shot, so the media slot becomes a white tile instead of a white
+   rectangle floating on charcoal. The render has its own margin baked in,
+   hence the lighter padding. Seller photos keep the treatment above. */
+.card__media--render { background: var(--render-bg); padding: 4%; }
 .card__img--failed { padding: 18%; opacity: 0.22; }
 
 .card__body {
@@ -791,6 +807,7 @@ a.card:active { transform: translateY(0); }
   aspect-ratio: 1 / 1;
 }
 .deal__media img { width: 100%; height: 100%; object-fit: contain; }
+.deal__media--render { background: var(--render-bg); padding: 4%; }
 
 .deal__series { margin: 0 0 4px; color: var(--muted); font-size: var(--t-sm); font-weight: 500; }
 .deal__title { font-size: var(--t-xl); font-weight: 800; margin: 0 0 12px; line-height: 1.3; }

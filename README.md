@@ -95,6 +95,23 @@ If the feed carries no original prices at all, the hero silently falls back to
 the newest deals with no strike-through. That is the intended behaviour — an
 empty comparison beats an invented one.
 
+### `image` / `sourceImage` — seller photo or official render
+
+`image` is the AliExpress seller photo until the bot has verified the set
+number, at which point it swaps in the official render from Brickset
+(`images.brickset.com/sets/images/<setId>-1.jpg`) or BrickLink
+(`img.bricklink.com/ItemImage/SN/0/<setId>-1.png`) and keeps the original
+under `sourceImage`. So: `sourceImage` present ⇒ `image` is a render.
+Absent ⇒ still a seller photo (MOCs, unverified set numbers). Both coexist in
+the feed; records are upgraded gradually, so a `setId` alone proves nothing.
+
+Renders are opaque product shots on pure white, so the site gives them a white
+tile (`card__media--render`, `fcard__media--render`, `deal__media--render`)
+instead of the charcoal inset seller photos get. The deal page and its
+`og:image` use Brickset's larger variant (`/sets/large/`), derived in
+`build.js`; the grid keeps the small one. `sourceImage` is owned by the bot's
+nightly refresh — nothing on the website side writes it.
+
 ### `featured`
 
 Optional. Deals flagged `"featured": true` fill the hero, in feed order. With
