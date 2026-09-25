@@ -48,6 +48,11 @@ const RELATED_COUNT = 4;
 const STATIC_PAGES = [
   { path: 'guide.html', freq: 'monthly', pri: '0.6' },
   { path: 'how-it-works.html', freq: 'monthly', pri: '0.5' },
+  /* Extensionless on purpose — terms.html and privacy.html are served at /terms
+     and /privacy (Caddy rewrites; see deploy/Caddyfile), and those are the URLs
+     the TikTok app declares, so they are the ones the sitemap must list. */
+  { path: 'terms', freq: 'yearly', pri: '0.2' },
+  { path: 'privacy', freq: 'yearly', pri: '0.2' },
 ];
 
 const TELEGRAM = 'https://t.me/+juxUyQ49on1mZGRk';
@@ -185,6 +190,10 @@ ${body}
       <a href="${up}archive.html">ארכיון הדילים</a>
       <a href="${up}guide.html">המדריך</a>
       <a href="${up}how-it-works.html">איך זה עובד</a>
+      <!-- Root-absolute: /terms and /privacy are extensionless URLs (Caddy
+           rewrites them to the .html files), so up has nothing to prefix. -->
+      <a href="/terms">תקנון</a>
+      <a href="/privacy">מדיניות פרטיות</a>
     </p>
     <p class="site-footer__disclosure">
       גילוי נאות: הקישורים באתר הם קישורי שותפים לאליאקספרס. אם תרכשו דרכם, נקבל עמלה מאליאקספרס.

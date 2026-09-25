@@ -7,10 +7,10 @@ root README still describes — see "Superseded" below.
 ## Layout on the server
 
 ```
-/opt/brickdeal-site/        this repo — the source
+/opt/brickdeal-site/        this repo — the source, and the TikTok service pm2 runs
 /var/www/brickdeal/         the served root
-  index.html, guide.html, how-it-works.html, assets/, robots.txt
-                                    copied from the source
+  index.html, guide.html, how-it-works.html, terms.html, privacy.html,
+  assets/, robots.txt               copied from the source
   favicon.ico                       copied from the source — see note below
   deals.json                        written by the bot on each post
   deal/  -> .releases/<ts>/deal/    symlink, swapped atomically per build
@@ -33,7 +33,7 @@ has to be copied alongside `index.html`; it is not covered by copying `assets/`.
 
 | File | Installs to | Purpose |
 |---|---|---|
-| `Caddyfile` | `/etc/caddy/Caddyfile` | TLS for apex + www, www 301s to apex |
+| `Caddyfile` | `/etc/caddy/Caddyfile` | TLS for apex + www; www 301s to apex except `/tiktok/*`, `/terms`, `/privacy` |
 | `brickdeal-build.sh` | `/usr/local/bin/` | Regenerates deal pages, theme pages, archive, sitemap |
 | `brickdeal-build.{service,timer}` | `/etc/systemd/system/` | Runs the above every 2 min |
 | `brickdeal-refresh.{service,timer}` | `/etc/systemd/system/` | Nightly price re-check (03:17) |
@@ -41,16 +41,34 @@ has to be copied alongside `index.html`; it is not covered by copying `assets/`.
 `brickdeal-refresh.service` runs `scripts/refresh-deals.js` from the **bot**
 repo, not this one.
 
+## The TikTok service
+
+`server/tiktok.js` is the one dynamic thing on the domain: the OAuth handshake for
+the TikTok app, under pm2 on 127.0.0.1:8791, with Caddy proxying `/tiktok/*` to
+it. It reads its credentials from `/opt/brickdeal-site/.env`, which is not in git.
+Setup, connection and upload steps: [`../docs/tiktok.md`](../docs/tiktok.md).
+
+```
+pm2 start server/tiktok.js --name brickdeal-tiktok   # first time, then pm2 save
+pm2 restart brickdeal-tiktok --update-env            # after a deploy
+```
+
 ## Static pages are copied, not built
 
-`index.html`, `guide.html` and `how-it-works.html` are hand-written and never
-touched by `build.js`. After editing any of them (or anything in `assets/`),
-copy it to the web root yourself — the build timer will not do it:
+`index.html`, `guide.html`, `how-it-works.html`, `terms.html` and `privacy.html`
+are hand-written and never touched by `build.js`. After editing any of them (or
+anything in `assets/`), copy it to the web root yourself — the build timer will
+not do it:
 
 ```
-cp /opt/brickdeal-site/{index.html,guide.html,how-it-works.html,robots.txt,favicon.ico} /var/www/brickdeal/
+cp /opt/brickdeal-site/{index.html,guide.html,how-it-works.html,terms.html,privacy.html,robots.txt,favicon.ico} /var/www/brickdeal/
 cp -r /opt/brickdeal-site/assets /var/www/brickdeal/
 ```
+
+`terms.html` and `privacy.html` are served at the extensionless `/terms` and
+`/privacy` — the URLs the TikTok app declares — via a `rewrite` in the Caddyfile.
+They are the two English pages on an otherwise Hebrew site, because the audience
+for them is the app reviewer.
 
 `sitemap.xml` lists the static pages via `STATIC_PAGES` in `build.js`, so a
 new static page needs an entry there too or crawlers won't be told about it.

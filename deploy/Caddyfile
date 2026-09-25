@@ -4,19 +4,76 @@
 # provided :80 and :443 are open and DNS for each name resolves here. Nothing
 # below references a cert path; that is intentional.
 
-# www redirects into the apex so SEO consolidates on one hostname. This block is
-# separate (not a matcher inside the main site) so that Caddy still obtains a
-# certificate for www — the redirect has to be served over HTTPS, otherwise a
-# visitor hitting https://www.brickdealil.com gets a TLS error before the 301
-# can happen, which is exactly the split this is meant to prevent.
+# www mostly redirects into the apex so SEO consolidates on one hostname. This
+# block is separate (not a matcher inside the main site) so that Caddy still
+# obtains a certificate for www — the redirect has to be served over HTTPS,
+# otherwise a visitor hitting https://www.brickdealil.com gets a TLS error before
+# the 301 can happen, which is exactly the split this is meant to prevent.
+#
+# Four paths are the exception. The TikTok app "BrickDeal" is registered against
+# the www hostname: redirect URI https://www.brickdealil.com/tiktok/callback, and
+# the terms and privacy URLs it declares carry the www too. Those cannot be
+# redirected. /tiktok/* in particular would break outright — the OAuth state
+# cookie is host-scoped, so a hop between the two hosts on the way back from
+# TikTok drops it and fails every callback.
+#
+# Everything else still 301s into the apex, so the canonical host is unchanged:
+# all canonical tags, the sitemap and robots.txt still point at the apex.
 www.brickdealil.com {
-	redir https://brickdealil.com{uri} permanent
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options SAMEORIGIN
+		-Server
+	}
+
+	# Bare /tiktok is in the matcher as well as /tiktok/*: the apex sends both here,
+	# so if this only caught the subpaths, /tiktok would fall through to the redirect
+	# below and bounce between the two hosts forever. The service answers it with a
+	# 404 page naming the real routes.
+	@tiktok path /tiktok /tiktok/*
+	handle @tiktok {
+		reverse_proxy 127.0.0.1:8791
+	}
+
+	# Exact paths, so /terms/ and /terms.html are not caught and keep their
+	# existing behaviour. rewrite (not redir) because the URL the TikTok
+	# reviewer opens must answer 200 itself, not bounce to another path.
+	@legal path /terms /privacy
+	handle @legal {
+		root * /var/www/brickdeal
+		rewrite * {path}.html
+		header Cache-Control "public, max-age=300"
+		file_server
+	}
+
+	handle {
+		redir https://brickdealil.com{uri} permanent
+	}
 }
 
 brickdealil.com {
 	root * /var/www/brickdeal
 
 	encode zstd gzip
+
+	# /terms and /privacy are extensionless URLs backed by terms.html and
+	# privacy.html in the web root. rewrite runs before file_server in Caddy's
+	# directive order, so this is all it takes. Same exact-path matcher as in the
+	# www block above.
+	@legal path /terms /privacy
+	rewrite @legal {path}.html
+	# The @html rule further down matches on the request path, which is /terms at
+	# the time header runs — so these two need the TTL spelled out.
+	header @legal Cache-Control "public, max-age=300"
+
+	# The whole OAuth flow has to stay on one hostname or the state cookie set by
+	# /tiktok/login is not sent back to /tiktok/callback. www is where the app is
+	# registered, so the apex hands the flow over instead of serving it.
+	@tiktok path /tiktok /tiktok/*
+	redir @tiktok https://www.brickdealil.com{uri} permanent
 
 	file_server {
 		# The build wrapper stages each release in .staging-<ts> and keeps

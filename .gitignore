@@ -1,7 +1,12 @@
 node_modules/
 .env
 .env.*
+# The only env file that is committed: keys with empty values, as a template.
+!.env.example
 *.log
 logs/
+# OAuth tokens (server/tiktok.js writes data/tiktok-tokens.json here, mode 600).
+# Never committed, and outside the web root by construction.
+data/
 .DS_Store
 Thumbs.db

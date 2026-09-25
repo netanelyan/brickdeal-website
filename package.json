@@ -1,0 +1,14 @@
+{
+  "name": "brickdeal-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "brickdealil.com — static site, the page generator, and the TikTok OAuth service",
+  "scripts": {
+    "build": "node build.js",
+    "tiktok:serve": "node server/tiktok.js",
+    "tiktok:upload": "node scripts/tiktok-upload-draft.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
