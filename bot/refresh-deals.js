@@ -4,7 +4,7 @@
  *
  * Drop in at: scripts/refresh-deals.js
  * Schedule (crontab -e), nightly, offset from the drip poster:
- *   17 3 * * *  cd ~/brickdeal-automation && /usr/bin/node scripts/refresh-deals.js >> logs/refresh.log 2>&1
+ *   17 3 * * *  cd /opt/brickdeal-automation && /usr/bin/node scripts/refresh-deals.js >> logs/refresh.log 2>&1
  *
  * Batched deliberately: a full catalog re-check every night would hammer the API
  * for no benefit. REFRESH_BATCH oldest-first per run means the whole catalog

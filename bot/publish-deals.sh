@@ -5,7 +5,7 @@
 #
 # Drop in at: scripts/publish-deals.sh  (chmod +x)
 # Schedule hourly, offset from the refresh job:
-#   43 * * * *  cd ~/brickdeal-automation && ./scripts/publish-deals.sh >> logs/publish.log 2>&1
+#   43 * * * *  cd /opt/brickdeal-automation && ./scripts/publish-deals.sh >> logs/publish.log 2>&1
 #
 # .env (never committed):
 #   SITE_REPO=netanelyan/brickdeal-site
